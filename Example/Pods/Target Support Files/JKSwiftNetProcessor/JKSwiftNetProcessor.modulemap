@@ -1,0 +1,6 @@
+framework module JKSwiftNetProcessor {
+  umbrella header "JKSwiftNetProcessor-umbrella.h"
+
+  export *
+  module * { export * }
+}
