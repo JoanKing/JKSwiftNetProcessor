@@ -29,7 +29,7 @@ class ViewController: BaseViewController {
         print("路径=\(NSHomeDirectory())")
 
         headDataArray = ["一、网络的基本配置", "二、网络请求", "三、日志"]
-        dataArray = [["配置基本的信息", "注意事项\n2.1、在 model 仅仅是服务器的数据的时候使用 struct，如果有其他自定义字段我们就需要使用 class;\n2.2、在返回的数据是 data 是数组的时候，我们需要把model用 `[]` 包裹起来"], ["data是Array类型（model是struct）", "data是Dictionary类型", "data是Array类型(有自定义字段，model是class)", "data类型是嵌套的模型"], ["日志跳转"]]
+        dataArray = [["配置基本的信息", "注意事项\n2.1、在 model 仅仅是服务器的数据的时候使用 struct，如果有其他自定义字段我们就需要使用 class;\n2.2、在返回的数据是 data 是数组的时候，我们需要把model用 `[]` 包裹起来"], ["data是Array类型（model是struct）", "data是Dictionary类型", "data是Array类型(有自定义字段，model是class)", "data类型是嵌套的模型", "data类型里面的 nick_name 自定义为 nickName"], ["日志跳转"]]
     }
 }
 
@@ -81,7 +81,7 @@ extension ViewController {
         }
     }
     
-    // MARK: data类型是嵌套的模型
+    // MARK: 2.4、data类型是嵌套的模型
     @objc func test24() {
         // model 是 UserModel
         // wiki链接是：http://rest.apizza.net/mock/f7479d4be5e7ab3d9829e20c2835578c/animal
@@ -89,6 +89,20 @@ extension ViewController {
             print("person信息：\(response.json as Any)")
             if response.isSuccess, let model = response.model, let type = model.type  {
                 print("动物的高度：\(type.height)")
+            }
+        }
+    }
+    
+    // MARK: 2.5、data类型里面的 nick_name 自定义为 nickName
+    @objc func test25() {
+        // model 是 UserModel
+        // wiki链接是：http://rest.apizza.net/mock/f7479d4be5e7ab3d9829e20c2835578c/car
+        CarRequest().request { (response) in
+            print("Car信息：\(response.json as Any)")
+            if response.isSuccess, let model = response.model {
+                print("汽车的名字：\(model.nickName)")
+                print("汽车的高度：\(model.height ?? 3)")
+                print("汽车的年龄：\(model.age ?? 20)")
             }
         }
     }

@@ -25,3 +25,5 @@ let KURLHomelist = "homelist"
 let kURLPersoninfo = "personinfo"
 // MARK: Animal信息
 let kURLAnimalInfo = "animal"
+// MARK: Car信息
+let kURLCarInfo = "car"
