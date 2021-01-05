@@ -103,6 +103,7 @@ extension ViewController {
                 print("汽车的名字：\(model.nickName)")
                 print("汽车的高度：\(model.height ?? 3)")
                 print("汽车的年龄：\(model.age ?? 20)")
+                print("汽车的年龄2：\(model.age2 ?? 11)")
             }
         }
     }

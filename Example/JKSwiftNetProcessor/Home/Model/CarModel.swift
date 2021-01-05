@@ -15,6 +15,10 @@ struct CarModel: Codable {
     var height: CGFloat?
     /// 车的年龄
     var age: CGFloat?
+    /// 车的年龄2(新增字段)
+    var age2: CGFloat? {
+        return (self.age ?? 0) + 1.0
+    }
     
     // 自定义键值名,虽然只是将 nick_name->nickName 其他字符也需要在这里列一遍，否则转换失败
     enum CodingKeys: String, CodingKey {
