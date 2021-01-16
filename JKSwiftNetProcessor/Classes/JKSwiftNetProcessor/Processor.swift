@@ -102,7 +102,8 @@ open class ProcessorCompletionStorage<DataType> {
 }
 
 fileprivate extension ProcessorDecoding {
-    func requestData(url: URL, responseHandler: @escaping (DataResponse<Any>) -> Response<DataType>) {
+    
+    func requestData(url: URL, responseHandler: @escaping (DataResponse<Any>) -> Response<DataType>, _ progress: ((Progress)->(Void))? = nil) {
         
         let responseClosure: (DataResponse<Any>) -> Void = { response in
             let resp = responseHandler(response)
@@ -111,21 +112,23 @@ fileprivate extension ProcessorDecoding {
             self.responseDidCall(response: resp)
             self.observer?.remove(processor: self)
         }
-        requestData(url: url, responseHandler: responseClosure)
+        requestData(url: url, responseHandler: responseClosure, progress)
     }
     
+    // MARK: 上传和普通请求的区分
     // BaseModel请求直接调这个
-    func requestData(url: URL, responseHandler: @escaping (DataResponse<Any>) -> Void) {
+    func requestData(url: URL, responseHandler: @escaping (DataResponse<Any>) -> Void, _ progress: ((Progress)->(Void))? = nil) {
         switch action {
         case let .upload(datas):
-            upload(datas: datas, url: url, responseHandler: responseHandler)
+            upload(datas: datas, url: url, responseHandler: responseHandler, progress)
         case .request:
             request(url: url, responseHandler: responseHandler)
         }
     }
     
+    // MARK: 上传
     // 上传
-    private func upload(datas: [ProcessorMultipart], url: URL, responseHandler: @escaping (DataResponse<Any>) -> Void) {
+    private func upload(datas: [ProcessorMultipart], url: URL, responseHandler: @escaping (DataResponse<Any>) -> Void, _ uploadProgress: ((Progress)->(Void))? = nil) {
         let formDatas = addUploadParam(formdatas: datas)
         var headers: [String: String] = self.headers ?? [:]
         do {
@@ -136,12 +139,16 @@ fileprivate extension ProcessorDecoding {
             let req = ServerManager.default.upload(data.0, to: url, method: method, headers: headers)
             req.responseJSON(completionHandler: responseHandler)
             request = req
+            req.uploadProgress { (progress) in
+                uploadProgress?(progress)
+            }
         } catch let err {
             let resp = DataResponse<Any>(request: nil, response: nil, data: nil, result: Result.failure(err))
             responseHandler(resp)
         }
     }
     
+    // MARK: 普通请求
     // 普通请求
     private func request(url: URL, responseHandler: @escaping (DataResponse<Any>) -> Void) {
         let paramEncoding: Alamofire.ParameterEncoding
@@ -159,6 +166,7 @@ fileprivate extension ProcessorDecoding {
 
 public extension ProcessorDecoding {
     
+    // MARK: 请求完成后的返回Closure
     /// 请求完成后的返回Closure
     @discardableResult
     func completion(_ completion: @escaping (Response<DataType>) -> Void) -> Self {
@@ -166,6 +174,7 @@ public extension ProcessorDecoding {
         return self
     }
     
+    // MARK: 请求成功的Closure，成功必须是与server的协议成功，并非http 200，但是基于http 200
     /// 请求成功的Closure，成功必须是与server的协议成功，并非http 200，但是基于http 200
     @discardableResult
     func success(_ success: @escaping (Response<DataType>) -> Void) -> Self {
@@ -173,6 +182,7 @@ public extension ProcessorDecoding {
         return self
     }
     
+    // MARK: 请求成功相反
     /// 与请求成功相反
     @discardableResult
     func failure(_ failure: @escaping (Response<DataType>) -> Void) -> Self {
@@ -180,6 +190,7 @@ public extension ProcessorDecoding {
         return self
     }
     
+    // MARK: 调用后自动为失败弹出toast
     /// 调用后自动为失败弹出toast
     @discardableResult
     func failureToast() -> Self {
@@ -210,22 +221,32 @@ public extension ProcessorDecoding where DataType == Any {
     }
 }
 
+// MARK:- 遵守协议 Codable 的网络请求
 public extension ProcessorDecoding where DataType: Codable {
+    // MARK: 最初的普通请求
     @discardableResult
     func request(completion: @escaping (Response<DataType>) -> Void) -> Self {
         completionStorage.completion = completion
         return start()
     }
     
+    // MARK: 最初的上传请求
     @discardableResult
-    func start() -> Self {
+    func upload(completion: @escaping (Response<DataType>) -> Void, _ progress: ((Progress)->(Void))? = nil) -> Self {
+        completionStorage.completion = completion
+        return start(progress)
+    }
+    
+    // MARK: 开始请求
+    @discardableResult
+    func start(_ progress: ((Progress)->(Void))? = nil) -> Self {
         let url = baseURL.append(path: path)
         let responseHandler: (DataResponse<Any>) -> Response<DataType> = { response in
             let resp = Response<DataType>(responseValue: response.value, parameters: self.parameters, header: self.headers, url: url)
             resp.decode(dataResponse: response, responseDecoder: self.responseDecoder, modelKeysPath: self.modelKeysPath)
             return resp
         }
-        requestData(url: url, responseHandler: responseHandler)
+        requestData(url: url, responseHandler: responseHandler, progress)
         return self
     }
 }
@@ -244,7 +265,7 @@ public extension ListModelRequest {
     }
 }
 
-// MARK: - 即将废弃
+// MARK:- 以下即将废弃
 public protocol ProcessorBaseModel: ProcessorDecoding where DataType: BaseModel {}
 
 public extension ProcessorBaseModel {
