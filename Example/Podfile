@@ -8,6 +8,5 @@ target 'JKSwiftNetProcessor_Example' do
   target 'JKSwiftNetProcessor_Tests' do
     inherit! :search_paths
 
-    
   end
 end
