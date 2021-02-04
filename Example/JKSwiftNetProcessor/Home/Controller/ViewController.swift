@@ -8,6 +8,7 @@
 
 import UIKit
 import Alamofire
+
 class ViewController: BaseViewController {
     
     override func viewDidLoad() {
@@ -29,7 +30,7 @@ class ViewController: BaseViewController {
         print("路径=\(NSHomeDirectory())")
         
         headDataArray = ["一、网络的基本配置", "二、网络请求", "三、网络上传", "四、网络下载：配置的本地Apache服务器：https://www.jianshu.com/p/713adb751223", "五、日志"]
-        dataArray = [["配置基本的信息", "注意事项\n2.1、在 model 仅仅是服务器的数据的时候使用 struct，如果有其他自定义字段我们就需要使用 class;\n2.2、在返回的数据是 data 是数组的时候，我们需要把model用 `[]` 包裹起来"], ["data是Array类型（model是struct）", "data是Dictionary类型", "data是Array类型(有自定义字段，model是class)", "data类型是嵌套的模型", "data类型里面的 nick_name 自定义为 nickName"], ["上传"], ["下载1：下面代码将logo图片下载下来保存到用户文档目录下（Documnets目录）,文件名不变。", "显示"], ["日志跳转"]]
+        dataArray = [["配置基本的信息", "注意事项\n2.1、在 model 仅仅是服务器的数据的时候使用 struct，如果有其他自定义字段我们就需要使用 class;\n2.2、在返回的数据是 data 是数组的时候，我们需要把model用 `[]` 包裹起来"], ["data是Array类型（model是struct）", "data是Dictionary类型", "data是Array类型(有自定义字段，model是class)", "data类型是嵌套的模型", "data类型里面的 nick_name 自定义为 nickName"], ["上传"], ["自定义下载文件的保存目录：下面代码将logo图片下载下来保存到用户文档目录下（Documnets目录）,文件名不变。", "自定义下载文件的保存目录：将logo图片下载下来保存到用户 Documnets/测试改名 目录下,文件名改成myLogo.png", "使用默认提供的下载路径：Alamofire内置的许多常用的下载路径方便我们使用，简化代码。注意的是，使用这种方式如果下载路径下有同名文件，不会覆盖原来的文件", "下载时附带请求参数：如果下载文件时需要传递一些参数，我们可以将参数拼接在 url 后面。也可以配置在 download 方法里的 parameters 参数中（其实这个方式最终也是拼接到 url 后面）", "下载进度：下载过程中会不断地打印下载进度，同时下载完成后也会打印完成信息，下载的过程中我们也可以得到已下载部分的大小，以及文件总大小。（单位都是字节）", "断点续传（Resume Data）：当下载过程中被意外停止时，可以在响应方法中把已下载的部分保存起来，下次再从断点继续下载"], ["日志跳转"]]
     }
 }
 
@@ -45,11 +46,109 @@ extension ViewController {
 // MARK:- 四、下载
 extension ViewController {
     
-    @objc func test42() {
-        
+    // MARK: 4.6、断点续传（Resume Data）：当下载过程中被意外停止时，可以在响应方法中把已下载的部分保存起来，下次再从断点继续下载
+    @objc func test46() {
+        /**
+          下面通过样例演示如何断点续传：
+         （1）程序启动后自动开始下载文件
+         （2）点击“停止下载”，终止下载并把已下载的数据保存起来，进度条停止走动。
+         （3）点击“继续下载”，从上次终止的地方继续下载，进度条继续走动。
+         */
+        self.navigationController?.pushViewController(ResumeDataViewController(), animated: true)
     }
     
-    // MARK: 4.1、将logo图片下载下来保存到用户文档目录下（Documnets目录）,文件名不变
+    // MARK: 4.5、下载进度：下载过程中会不断地打印下载进度，同时下载完成后也会打印完成信息，下载的过程中我们也可以得到已下载部分的大小，以及文件总大小。（单位都是字节）
+    @objc func test45() {
+        let imageView = UIImageView(frame: CGRect(x: 100, y: 100, width: 150, height: 150))
+        self.view.addSubview(imageView)
+        //下面这两种方式效果是一样的
+        let destination = DownloadRequest.suggestedDownloadDestination(for: .documentDirectory)
+        Alamofire.download("http://localhost/large.png", to: destination).response(completionHandler: { (response) in
+            
+        }).downloadProgress { progress in
+                print("当前进度: \(progress.fractionCompleted)")
+                print("已下载：\(progress.completedUnitCount/1024)KB")
+                print("总大小：\(progress.totalUnitCount/1024)KB\n--------------------------------------")
+            }.responseData { response in
+                if let data = response.result.value {
+                    print("下载完毕!")
+                    let image = UIImage(data: data)
+                    imageView.image = image
+                    JKAsyncs.asyncDelay(3) {
+                    } _: {
+                        imageView.removeFromSuperview()
+                    }
+                }
+            }
+    }
+    
+    // MARK: 4.4、下载时附带请求参数：如果下载文件时需要传递一些参数，我们可以将参数拼接在 url 后面。也可以配置在 download 方法里的 parameters 参数中（其实这个方式最终也是拼接到 url 后面）
+    @objc func test44() {
+        let imageView = UIImageView(frame: CGRect(x: 100, y: 100, width: 150, height: 150))
+        self.view.addSubview(imageView)
+        // 下面这两种方式效果是一样的
+        let destination = DownloadRequest.suggestedDownloadDestination(for: .documentDirectory)
+        // Alamofire.download("http://www.hangge.com/blog/images/logo.png?foo=bar", to: destination)
+        Alamofire.download("http://www.hangge.com/blog/images/logo.png", parameters: ["foo": "bar"],
+                           to: destination).response { (response) in
+                            
+                if let imagePath = response.destinationURL?.path {
+                    let image = UIImage(contentsOfFile: imagePath)
+                    imageView.image = image
+                    JKAsyncs.asyncDelay(3) {
+                    } _: {
+                        imageView.removeFromSuperview()
+                    }
+                }
+        }
+    }
+    
+    // MARK: 4.3、使用默认提供的下载路径，Alamofire内置的许多常用的下载路径方便我们使用，简化代码。注意的是，使用这种方式如果下载路径下有同名文件，不会覆盖原来的文件。
+    @objc func test43() {
+        let imageView = UIImageView(frame: CGRect(x: 100, y: 100, width: 150, height: 150))
+        self.view.addSubview(imageView)
+        let destination = DownloadRequest.suggestedDownloadDestination(for: .documentDirectory)
+        Alamofire.download("http://localhost/ironman.png", to: destination).response { (response) in
+            if let imagePath = response.destinationURL?.path {
+                let image = UIImage(contentsOfFile: imagePath)
+                imageView.image = image
+                JKAsyncs.asyncDelay(3) {
+                } _: {
+                    imageView.removeFromSuperview()
+                }
+            }
+        }
+    }
+    
+    // MARK: 4.2、自定义下载文件的保存目录：将logo图片下载下来保存到用户 Documnets/测试改名 目录下,文件名改成myLogo.png
+    @objc func test42() {
+        
+        let imageView = UIImageView(frame: CGRect(x: 100, y: 100, width: 150, height: 150))
+        self.view.addSubview(imageView)
+        //指定下载路径和保存文件名
+        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+            let fileURL = URL(fileURLWithPath: FileManager.DocumnetsDirectory() + "/测试改名/" + "myLogo.png")
+            //两个参数表示如果有同名文件则会覆盖，如果路径中文件夹不存在则会自动创建
+            return (fileURL, [.removePreviousFile, .createIntermediateDirectories])
+        }
+         
+        //开始下载
+        Alamofire.download("http://localhost/testicon.png", to: destination)
+            .response { response in
+                print(response)
+                 
+                if let imagePath = response.destinationURL?.path {
+                    let image = UIImage(contentsOfFile: imagePath)
+                    imageView.image = image
+                    JKAsyncs.asyncDelay(3) {
+                    } _: {
+                        imageView.removeFromSuperview()
+                    }
+                }
+        }
+    }
+    
+    // MARK: 4.1、自定义下载文件的保存目录：将logo图片下载下来保存到用户文档目录下（Documnets目录）,文件名不变
     @objc func test41() {
         
         let imageView = UIImageView(frame: CGRect(x: 100, y: 100, width: 150, height: 150))

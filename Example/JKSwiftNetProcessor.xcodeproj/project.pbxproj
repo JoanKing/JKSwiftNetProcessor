@@ -14,6 +14,7 @@
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
 		78E94BC4FC4445CF69DFA8F2 /* Pods_JKSwiftNetProcessor_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B70D2E15D86E8C9FBDFF559 /* Pods_JKSwiftNetProcessor_Tests.framework */; };
 		841768C925B2F5BE00A8D119 /* VodeoUploadRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 841768C825B2F5BE00A8D119 /* VodeoUploadRequest.swift */; };
+		841DF20D25CBDE8200AA9587 /* ResourceDownloadRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 841DF20C25CBDE8200AA9587 /* ResourceDownloadRequest.swift */; };
 		8457688B259DC9EC006F93D4 /* CarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8457688A259DC9EC006F93D4 /* CarModel.swift */; };
 		8466B89D259308D1001C4EED /* BaseNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8466B89C259308D1001C4EED /* BaseNavigationViewController.swift */; };
 		8466B8A3259308EC001C4EED /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8466B8A2259308EC001C4EED /* BaseViewController.swift */; };
@@ -23,6 +24,7 @@
 		8466B8B9259309A4001C4EED /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8466B8B8259309A4001C4EED /* UserModel.swift */; };
 		8466B8BD259309BC001C4EED /* Animal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8466B8BC259309BC001C4EED /* Animal.swift */; };
 		8466B8C625930A49001C4EED /* JKURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8466B8C525930A49001C4EED /* JKURL.swift */; };
+		84B5B12125CBA1AE000F86A9 /* ResumeDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B5B12025CBA1AE000F86A9 /* ResumeDataViewController.swift */; };
 		C7541A83BE3AD56821C76EB2 /* Pods_JKSwiftNetProcessor_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8646AF917B4E0B6D2EE6DFDB /* Pods_JKSwiftNetProcessor_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +55,7 @@
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		7859904EF5F9E9B334DEE210 /* Pods-JKSwiftNetProcessor_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JKSwiftNetProcessor_Tests.release.xcconfig"; path = "Target Support Files/Pods-JKSwiftNetProcessor_Tests/Pods-JKSwiftNetProcessor_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		841768C825B2F5BE00A8D119 /* VodeoUploadRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VodeoUploadRequest.swift; sourceTree = "<group>"; };
+		841DF20C25CBDE8200AA9587 /* ResourceDownloadRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDownloadRequest.swift; sourceTree = "<group>"; };
 		8457688A259DC9EC006F93D4 /* CarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarModel.swift; sourceTree = "<group>"; };
 		8466B89C259308D1001C4EED /* BaseNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseNavigationViewController.swift; sourceTree = "<group>"; };
 		8466B8A2259308EC001C4EED /* BaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
@@ -63,6 +66,7 @@
 		8466B8BC259309BC001C4EED /* Animal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animal.swift; sourceTree = "<group>"; };
 		8466B8C525930A49001C4EED /* JKURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JKURL.swift; sourceTree = "<group>"; };
 		8466B8C925930AB9001C4EED /* JKSwiftNetProcessor_Example-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "JKSwiftNetProcessor_Example-Bridging-Header.h"; sourceTree = "<group>"; };
+		84B5B12025CBA1AE000F86A9 /* ResumeDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeDataViewController.swift; sourceTree = "<group>"; };
 		8646AF917B4E0B6D2EE6DFDB /* Pods_JKSwiftNetProcessor_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_JKSwiftNetProcessor_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD5DD7DC9E4B1506A7CAC5C0 /* Pods-JKSwiftNetProcessor_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JKSwiftNetProcessor_Tests.debug.xcconfig"; path = "Target Support Files/Pods-JKSwiftNetProcessor_Tests/Pods-JKSwiftNetProcessor_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		E9E1D51FAD1A2AEB6D63225D /* JKSwiftNetProcessor.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = JKSwiftNetProcessor.podspec; path = ../JKSwiftNetProcessor.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
@@ -204,6 +208,7 @@
 			isa = PBXGroup;
 			children = (
 				8466B8AC2593094D001C4EED /* ViewController.swift */,
+				84B5B12025CBA1AE000F86A9 /* ResumeDataViewController.swift */,
 				8466B8C525930A49001C4EED /* JKURL.swift */,
 			);
 			path = Controller;
@@ -218,6 +223,7 @@
 				8466B8BC259309BC001C4EED /* Animal.swift */,
 				8457688A259DC9EC006F93D4 /* CarModel.swift */,
 				841768C825B2F5BE00A8D119 /* VodeoUploadRequest.swift */,
+				841DF20C25CBDE8200AA9587 /* ResourceDownloadRequest.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -427,10 +433,12 @@
 				841768C925B2F5BE00A8D119 /* VodeoUploadRequest.swift in Sources */,
 				8466B8A3259308EC001C4EED /* BaseViewController.swift in Sources */,
 				8466B8C625930A49001C4EED /* JKURL.swift in Sources */,
+				841DF20D25CBDE8200AA9587 /* ResourceDownloadRequest.swift in Sources */,
 				8457688B259DC9EC006F93D4 /* CarModel.swift in Sources */,
 				8466B8AD2593094D001C4EED /* ViewController.swift in Sources */,
 				8466B8B125930976001C4EED /* HomeModel.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
+				84B5B12125CBA1AE000F86A9 /* ResumeDataViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
