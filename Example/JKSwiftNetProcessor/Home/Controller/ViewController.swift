@@ -30,12 +30,25 @@ class ViewController: BaseViewController {
         print("路径=\(NSHomeDirectory())")
         
         headDataArray = ["一、网络的基本配置", "二、网络请求", "三、网络上传", "四、网络下载：配置的本地Apache服务器：https://www.jianshu.com/p/713adb751223", "五、日志"]
-        dataArray = [["配置基本的信息", "注意事项\n2.1、在 model 仅仅是服务器的数据的时候使用 struct，如果有其他自定义字段我们就需要使用 class;\n2.2、在返回的数据是 data 是数组的时候，我们需要把model用 `[]` 包裹起来"], ["data是Array类型（model是struct）", "data是Dictionary类型", "data是Array类型(有自定义字段，model是class)", "data类型是嵌套的模型", "data类型里面的 nick_name 自定义为 nickName"], ["上传"], ["自定义下载文件的保存目录：下面代码将logo图片下载下来保存到用户文档目录下（Documnets目录）,文件名不变。", "自定义下载文件的保存目录：将logo图片下载下来保存到用户 Documnets/测试改名 目录下,文件名改成myLogo.png", "使用默认提供的下载路径：Alamofire内置的许多常用的下载路径方便我们使用，简化代码。注意的是，使用这种方式如果下载路径下有同名文件，不会覆盖原来的文件", "下载时附带请求参数：如果下载文件时需要传递一些参数，我们可以将参数拼接在 url 后面。也可以配置在 download 方法里的 parameters 参数中（其实这个方式最终也是拼接到 url 后面）", "下载进度：下载过程中会不断地打印下载进度，同时下载完成后也会打印完成信息，下载的过程中我们也可以得到已下载部分的大小，以及文件总大小。（单位都是字节）", "断点续传（Resume Data）：当下载过程中被意外停止时，可以在响应方法中把已下载的部分保存起来，下次再从断点继续下载"], ["日志跳转"]]
+        dataArray = [["配置基本的信息", "注意事项\n2.1、在 model 仅仅是服务器的数据的时候使用 struct，如果有其他自定义字段我们就需要使用 class;\n2.2、在返回的数据是 data 是数组的时候，我们需要把model用 `[]` 包裹起来"], ["data是Array类型（model是struct）", "data是Dictionary类型", "data是Array类型(有自定义字段，model是class)", "data类型是嵌套的模型", "data类型里面的 nick_name 自定义为 nickName"], ["上传"], ["自定义下载文件的保存目录：下面代码将logo图片下载下来保存到用户文档目录下（Documnets目录）,文件名不变。", "自定义下载文件的保存目录：将logo图片下载下来保存到用户 Documnets/测试改名 目录下,文件名改成myLogo.png", "使用默认提供的下载路径：Alamofire内置的许多常用的下载路径方便我们使用，简化代码。注意的是，使用这种方式如果下载路径下有同名文件，不会覆盖原来的文件", "下载时附带请求参数：如果下载文件时需要传递一些参数，我们可以将参数拼接在 url 后面。也可以配置在 download 方法里的 parameters 参数中（其实这个方式最终也是拼接到 url 后面）", "下载进度：下载过程中会不断地打印下载进度，同时下载完成后也会打印完成信息，下载的过程中我们也可以得到已下载部分的大小，以及文件总大小。（单位都是字节）", "断点续传（Resume Data）：当下载过程中被意外停止时，可以在响应方法中把已下载的部分保存起来，下次再从断点继续下载"], ["日志跳转", "测试"]]
     }
 }
 
 // MARK:- 五、日志
 extension ViewController {
+    
+    @objc func test52() {
+   
+        Alamofire.request("http://cg-trade-gateway-test.yixin.com/user/helpCenter/select/treeDetail?id=79", parameters: nil).responseJSON { response in
+                print(response.request)  // original URL request
+                print(response.response) // URL response
+                print(response.data)     // server data
+                print(response.result)   // result of response serialization
+                if let JSON = response.result.value {
+                    print("JSON: \(JSON)") //具体如何解析json内容可看下方“响应处理”部分
+                }
+            }
+    }
     
     // MARK: 5.1、日志跳转
     @objc func test51() {
@@ -238,6 +251,8 @@ extension ViewController {
             print("person信息：\(response.json as Any)")
             if response.isSuccess, let model = response.model {
                 print("姓名和身高：\(model.nameAndAge ?? "")")
+            } else {
+                response.getMsgStr().toast()
             }
         }
     }

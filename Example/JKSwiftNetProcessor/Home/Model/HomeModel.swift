@@ -34,7 +34,4 @@ class HomeModelList: JKCodable<[HomeModel]> {
     override var cacheName: String {
         return "A-stockIndexList"
     }
-    
-    
 }
-

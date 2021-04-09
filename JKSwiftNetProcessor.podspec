@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'JKSwiftNetProcessor'
-  s.version          = '0.1.1'
+  s.version          = '0.1.2'
   s.summary          = '这是一个简单的网络请求库'
   s.description      = 'JKSwiftNetProcessor 主要是封装了Alamofire、HandyJSON、CryptoSwift的库'
 

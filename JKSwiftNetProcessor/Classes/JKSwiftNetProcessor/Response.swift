@@ -81,6 +81,14 @@ public class Response<T> {
         if dataResponse.error?.code == -999 {
             return (ProcessorResult.cancel, nil)
         }
+        
+        // 没有网络连接 NSURLErrorNotConnectedToInternet - 1009
+        
+        // 超时返回失败的信息
+        if dataResponse.error?.code == NSURLErrorTimedOut, let error = dataResponse.error {
+            return (ProcessorResult.failure(error: ProcessorError.AFError(error: error), msg: "网络连接异常，请稍后再试", errorCode: "-1001"), nil)
+        }
+        
         if let error = dataResponse.error {
             return (ProcessorResult.failure(error: ProcessorError.AFError(error: error), msg: nil, errorCode: nil), nil)
         }
@@ -94,6 +102,17 @@ public class Response<T> {
             return (result, nil)
         }
         return (nil, json)
+    }
+}
+
+// MARK:- 错误信息的提取
+public extension Response {
+    func getMsgStr() -> String {
+        var msgStr = "网络无法连接，请稍后再试"
+        if let msg = self.msg, msg.count > 0 {
+            msgStr = msg
+        }
+        return msgStr
     }
 }
 
