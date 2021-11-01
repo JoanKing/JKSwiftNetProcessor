@@ -124,5 +124,4 @@ class ResumeDataViewController: UIViewController {
             self.continueBtn.isEnabled = false
         }
     }
-
 }

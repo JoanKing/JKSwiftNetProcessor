@@ -15,14 +15,14 @@ public enum Edge {
     case right
 }
 
-// MARK:- 一、基本的扩展
-public extension UIScrollView {
+// MARK: - 一、基本的扩展
+public extension JKPOP where Base: UIScrollView {
     
     // MARK: 1.1、适配iOS 11
     /// 适配iOS 11
-    @objc func neverAdjustContentInset() {
-        if #available(iOS 11.0, *), responds(to: #selector(setter: contentInsetAdjustmentBehavior)) {
-            self.contentInsetAdjustmentBehavior = .never
+    func neverAdjustContentInset() {
+        if #available(iOS 11.0, *), base.responds(to: #selector(setter: base.contentInsetAdjustmentBehavior)) {
+            self.base.contentInsetAdjustmentBehavior = .never
         }
     }
     
@@ -32,22 +32,64 @@ public extension UIScrollView {
     ///   - edege: 滚动的位置
     ///   - animated: 是否要动画
     func scroll(edege: Edge, animated: Bool = true) {
-        var offset = self.contentOffset
+        var offset = self.base.contentOffset
         switch edege {
         case .top:
-            offset.y =  -self.contentInset.top
+            offset.y =  -self.base.contentInset.top
         case .left:
-            offset.x = -self.contentInset.left
+            offset.x = -self.base.contentInset.left
         case .bottom:
-            offset.y = self.contentSize.height - self.bounds.size.height + self.contentInset.bottom
+            offset.y = self.base.contentSize.height - self.base.bounds.size.height + self.base.contentInset.bottom
         case .right:
-            offset.x = self.contentSize.width - self.bounds.size.width + self.contentInset.right
+            offset.x = self.base.contentSize.width - self.base.bounds.size.width + self.base.contentInset.right
         }
-        self.setContentOffset(offset, animated: animated)
+        self.base.setContentOffset(offset, animated: animated)
+    }
+    
+    // MARK: 1.3、获取 ScrollView 的 contentScroll 长图像
+    /// 获取 ScrollView 的 contentScroll 长图像
+    /// - Parameter completionHandler: 获取闭包
+    func snapShotContentScroll(_ completionHandler: @escaping (_ screenShotImage: UIImage?) -> Void) {
+        /// 放一个假的封面
+        let snapShotView = self.base.snapshotView(afterScreenUpdates: true)
+        snapShotView?.frame = CGRect(x: self.base.frame.origin.x, y: self.base.frame.origin.y, width: (snapShotView?.frame.size.width)!, height: (snapShotView?.frame.size.height)!)
+        self.base.superview?.addSubview(snapShotView!)
+        ///  基的原点偏移
+        let originOffset = self.base.contentOffset
+        /// 分页
+        let page  = floorf(Float(self.base.contentSize.height / self.base.bounds.height))
+        /// 打开位图上下文大小为截图的大小
+        UIGraphicsBeginImageContextWithOptions(self.base.contentSize, false, UIScreen.main.scale)
+        /// 这个方法是一个绘图，里面可能有递归调用
+        self.snapShotContentScrollPage(index: 0, maxIndex: Int(page), callback: { () -> Void in
+            let screenShotImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            /// 设置原点偏移
+            self.base.setContentOffset(originOffset, animated: false)
+            snapShotView?.removeFromSuperview()
+            /// 获取 snapShotContentScroll 时的回调图像
+            completionHandler(screenShotImage)
+        })
+    }
+    
+    /// 根据偏移量和页数绘制
+    /// 此方法为绘图，根据偏移量和页数可能会递归调用insideraw
+    private func snapShotContentScrollPage(index: Int, maxIndex: Int, callback: @escaping () -> Void) {
+        self.base.setContentOffset(CGPoint(x: 0, y: CGFloat(index) * self.base.frame.size.height), animated: false)
+        let splitFrame = CGRect(x: 0, y: CGFloat(index) * self.base.frame.size.height, width: base.bounds.size.width, height: base.bounds.size.height)
+        JKAsyncs.asyncDelay(Double(Int64(0.3 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) {
+        } _: {
+            self.base.drawHierarchy(in: splitFrame, afterScreenUpdates: true)
+            if index < maxIndex {
+                self.snapShotContentScrollPage(index: index + 1, maxIndex: maxIndex, callback: callback)
+            } else {
+                callback()
+            }
+        }
     }
 }
 
-// MARK:- 二、链式编程
+// MARK: - 二、链式编程
 public extension UIScrollView {
     
     // MARK: 2.1、设置偏移量 CGPoint
@@ -278,4 +320,3 @@ public extension UIScrollView {
         return self
     }
 }
-

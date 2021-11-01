@@ -7,7 +7,7 @@
 
 import UIKit
 
-// MARK:- 一、基本的扩展
+// MARK: - 一、基本的扩展
 public extension Timer {
     
     // MARK: 1.1、构造器创建定时器
@@ -46,7 +46,7 @@ public extension Timer {
     ///   - handler: 定时器的回调
     /// - Returns: 返回 Timer
     @discardableResult
-    static func     runThisEvery(timeInterval: TimeInterval, handler: @escaping (Timer?) -> Void) -> Timer? {
+    static func runThisEvery(timeInterval: TimeInterval, handler: @escaping (Timer?) -> Void) -> Timer? {
         let fireDate = CFAbsoluteTimeGetCurrent()
         guard let timer = CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, fireDate, timeInterval, 0, 0, handler) else {
             return nil
@@ -56,7 +56,7 @@ public extension Timer {
     }
 }
 
-// MARK:- 私有的方法
+// MARK: - 私有的方法
 public extension Timer {
     @objc fileprivate class func timerCB(timer: Timer) {
         guard let cb = timer.userInfo as? ((Timer) -> Void) else {

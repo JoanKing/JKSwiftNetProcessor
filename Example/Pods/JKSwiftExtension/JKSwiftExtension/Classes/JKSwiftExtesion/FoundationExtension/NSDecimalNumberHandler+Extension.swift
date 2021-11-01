@@ -7,7 +7,7 @@
 
 import UIKit
 
-// MARK:- 苹果针对浮点类型计算精度问题提供出来的计算类
+// MARK: - 苹果针对浮点类型计算精度问题提供出来的计算类
 /// NSDecimalNumberHandler 苹果针对浮点类型计算精度问题提供出来的计算类
 /**
  初始化方法
@@ -26,6 +26,7 @@ import UIKit
  case bankers = 3 是在四舍五入的基础上，加上末尾数为5时，变成偶数的规则
  }
  */
+extension NSDecimalNumberHandler: JKPOPCompatible {}
 
 /// 计算的类型
 public enum DecimalNumberHandlerType: String {
@@ -39,8 +40,8 @@ public enum DecimalNumberHandlerType: String {
     case dividing
 }
 
-// MARK:- 一、基本的扩展
-public extension NSDecimalNumberHandler {
+// MARK: - 一、基本的扩展
+public extension JKPOP where Base: NSDecimalNumberHandler {
     
     // MARK: 1.1、向下取整取倍数
     /// 向下取整取倍数
@@ -55,7 +56,7 @@ public extension NSDecimalNumberHandler {
     // MARK: 1.2、一个数字能否整除另外一个数字
     static func isDivisible(value1: Any, value2: Any) -> Bool {
         let value = decimalNumberHandlerValue(type: .dividing, value1: value1, value2: value2, roundingMode: .down, scale: 3, raiseOnExactness: false, raiseOnOverflow: false, raiseOnUnderflow: false, raiseOnDivideByZero: false).stringValue
-        let valueArray = value.separatedByString(char: ".")
+        let valueArray = value.jk.separatedByString(with: ".")
         // 没有小数代表是整除
         guard valueArray.count > 1 else {
             return true
@@ -79,8 +80,8 @@ public extension NSDecimalNumberHandler {
     }
 }
 
-// MARK:- public 公有方法
-public extension NSDecimalNumberHandler {
+// MARK: - public 公有方法
+public extension JKPOP where Base: NSDecimalNumberHandler {
     
     /// 两个数的：加 减 乘 除
     /// - Parameters:

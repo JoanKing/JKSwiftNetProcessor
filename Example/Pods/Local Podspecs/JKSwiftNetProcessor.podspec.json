@@ -1,6 +1,6 @@
 {
   "name": "JKSwiftNetProcessor",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "summary": "这是一个简单的网络请求库",
   "description": "JKSwiftNetProcessor 主要是封装了Alamofire、HandyJSON、CryptoSwift的库",
   "homepage": "https://github.com/JoanKing/JKSwiftNetProcessor",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/JoanKing/JKSwiftNetProcessor.git",
-    "tag": "0.1.0"
+    "tag": "0.1.2"
   },
   "platforms": {
     "ios": "9.0"

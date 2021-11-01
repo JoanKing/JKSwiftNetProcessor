@@ -9,9 +9,11 @@
 import UIKit
 import AVFoundation
 import Dispatch
+import Photos
 
-// MARK:- 一、基本的扩展
-public extension UIImage {
+extension UIImage: JKPOPCompatible {}
+// MARK: - 一、基本的扩展
+public extension JKPOP where Base: UIImage {
     
     // MARK: 1.1、设置图片的圆角
     /// 设置图片的圆角
@@ -21,7 +23,7 @@ public extension UIImage {
     ///   - imageSize: 图片的大小
     /// - Returns: 剪切后的图片
     func isRoundCorner(radius: CGFloat = 3, byRoundingCorners corners: UIRectCorner = .allCorners, imageSize: CGSize?) -> UIImage? {
-        let weakSize = imageSize ?? size
+        let weakSize = imageSize ?? base.size
         let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: weakSize)
         // 开始图形上下文
         UIGraphicsBeginImageContextWithOptions(weakSize, false, UIScreen.main.scale)
@@ -37,7 +39,7 @@ public extension UIImage {
         // 裁剪
         contentRef.clip()
         // 将原图片画到图形上下文
-        draw(in: rect)
+        base.draw(in: rect)
         contentRef.drawPath(using: .fillStroke)
         guard let output = UIGraphicsGetImageFromCurrentImageContext() else {
             // 关闭上下文
@@ -53,7 +55,7 @@ public extension UIImage {
     /// 设置圆形图片
     /// - Returns: 圆形图片
     func isCircleImage() -> UIImage? {
-        return isRoundCorner(radius: (self.size.width < self.size.height ? self.size.width : self.size.height) / 2.0, byRoundingCorners: .allCorners, imageSize: self.size)
+        return isRoundCorner(radius: (self.base.size.width < self.base.size.height ? self.base.size.width : self.base.size.height) / 2.0, byRoundingCorners: .allCorners, imageSize: self.base.size)
     }
     
     // MARK: 1.3、获取视频的第一帧
@@ -118,31 +120,31 @@ public extension UIImage {
     /// alpha: 透明度
     /// - Returns: newImage
     func imageByApplayingAlpha(_ alpha: CGFloat) -> UIImage {
-        UIGraphicsBeginImageContext(size)
+        UIGraphicsBeginImageContext(base.size)
         let context = UIGraphicsGetCurrentContext()
-        let area = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        let area = CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height)
         context?.scaleBy(x: 1, y: -1)
         context?.translateBy(x: 0, y: -area.height)
         context?.setBlendMode(.multiply)
         context?.setAlpha(alpha)
-        context?.draw(self.cgImage!, in: area)
+        context?.draw(self.base.cgImage!, in: area)
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return newImage ?? self
+        return newImage ?? self.base
     }
-
+    
     // MARK: 1.6、裁剪给定区域
     /// 裁剪给定区域
     /// - Parameter crop: 裁剪区域
     /// - Returns: 剪裁后的图片
-     func cropWithCropRect( _ crop: CGRect) -> UIImage? {
-        let cropRect = CGRect(x: crop.origin.x * self.scale, y: crop.origin.y * self.scale, width: crop.size.width * self.scale, height: crop.size.height *  self.scale)
+    func cropWithCropRect( _ crop: CGRect) -> UIImage? {
+        let cropRect = CGRect(x: crop.origin.x * self.base.scale, y: crop.origin.y * self.base.scale, width: crop.size.width * self.base.scale, height: crop.size.height *  self.base.scale)
         if cropRect.size.width <= 0 || cropRect.size.height <= 0 {
             return nil
         }
         var image:UIImage?
         autoreleasepool{
-            let imageRef: CGImage?  = self.cgImage!.cropping(to: cropRect)
+            let imageRef: CGImage?  = self.base.cgImage!.cropping(to: cropRect)
             if let imageRef = imageRef {
                 image = UIImage(cgImage: imageRef)
             }
@@ -159,9 +161,9 @@ public extension UIImage {
     /// - Returns: 返回水印图片
     func drawTextInImage(drawTextframe: CGRect, drawText: String, withAttributes: [NSAttributedString.Key : Any]? = nil) -> UIImage {
         // 开启图片上下文
-        UIGraphicsBeginImageContext(self.size)
+        UIGraphicsBeginImageContext(self.base.size)
         // 图形重绘
-        self.draw(in: CGRect(x: 0, y: 0, width: self.size.width, height: self.size.height))
+        self.base.draw(in: CGRect(x: 0, y: 0, width: self.base.size.width, height: self.base.size.height))
         // 水印文字属性
         let attributes = withAttributes
         // 水印文字和大小
@@ -178,7 +180,22 @@ public extension UIImage {
         return image!
     }
     
-    // MARK: 1.8、文字图片占位符
+    // MARK: 1.8、添加图片水印
+    /// 添加图片水印
+    /// - Parameters:
+    ///   - rect: 水印图片的位置
+    ///   - image: 水印图片
+    /// - Returns: 带有水印的图片
+    func addImageWatermark(rect: CGRect, image: UIImage) -> UIImage? {
+        UIGraphicsBeginImageContext(base.size)
+        base.draw(in: CGRect.init(x: 0, y: 0, width: base.size.width, height: base.size.height))
+        image.draw(in: rect)
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
+    }
+    
+    // MARK: 1.9、文字图片占位符
     /// 文字图片占位符
     /// - Parameters:
     ///   - text: 图片上的文字
@@ -196,7 +213,7 @@ public extension UIImage {
         let sise = CGSize(width: size.0, height: size.1)
         let rect = CGRect(origin: CGPoint.zero, size: sise)
         
-        let textsize = text.rectSize(font: UIFont.systemFont(ofSize: fontSize), size: CGSize(width: kScreenW, height: CGFloat(MAXFLOAT)))
+        let textsize = text.jk.rectSize(font: UIFont.systemFont(ofSize: fontSize), size: CGSize(width: kScreenW, height: CGFloat(MAXFLOAT)))
         
         // 开启上下文
         UIGraphicsBeginImageContext(sise)
@@ -225,28 +242,204 @@ public extension UIImage {
         return image
     }
     
-    // MARK: 1.9、更改图片颜色
+    // MARK: 1.10、更改图片颜色
     /// 更改图片颜色
-    /// - Parameter color: 图片颜色
+    /// - Parameters:
+    ///   - color: 图片颜色
+    ///   - blendMode: 模式
     /// - Returns: 返回更改后的图片颜色
-    func imageWithColor(color : UIColor) -> UIImage? {
+    func tint(color: UIColor, blendMode: CGBlendMode = .destinationIn) -> UIImage? {
+        /**
+         有时我们的App需要能切换不同的主题和场景，希望图片能动态的改变颜色以配合对应场景的色调。虽然我们可以根据不同主题事先创建不同颜色的图片供调用，但既然用的图片素材都一样，还一个个转换显得太麻烦，而且不便于维护。使用blendMode变可以满足这个需求。
+         */
         defer {
             UIGraphicsEndImageContext()
         }
-        UIGraphicsBeginImageContext(self.size)
+        let drawRect = CGRect(x: 0, y: 0, width: self.base.size.width, height: self.base.size.height)
+        UIGraphicsBeginImageContextWithOptions(self.base.size, false, self.base.scale)
         color.setFill()
-        let bounds = CGRect.init(x: 0, y: 0, width: self.size.width, height: self.size.height)
-        UIRectFill(bounds)
-        self.draw(in: bounds, blendMode: CGBlendMode.destinationIn, alpha: 1.0)
+        UIRectFill(drawRect)
+        self.base.draw(in: drawRect, blendMode: CGBlendMode.destinationIn, alpha: 1.0)
         guard let tintedImage = UIGraphicsGetImageFromCurrentImageContext() else {
             return nil
         }
         return tintedImage
     }
+    
+    // MARK: 1.11、获取图片某一个位置像素的颜色
+    /// 获取图片某一个位置像素的颜色
+    /// - Parameter point: 图片上某个点
+    /// - Returns: 返回某个点的 UIColor
+    func pixelColor(_ point: CGPoint) -> UIColor? {
+        if point.x < 0 || point.x > base.size.width || point.y < 0 || point.y > base.size.height {
+            return nil
+        }
+        
+        let provider = self.base.cgImage!.dataProvider
+        let providerData = provider!.data
+        let data = CFDataGetBytePtr(providerData)
+        
+        let numberOfComponents: CGFloat = 4.0
+        let pixelData = (base.size.width * point.y + point.x) * numberOfComponents
+        
+        let r = CGFloat(data![Int(pixelData)]) / 255.0
+        let g = CGFloat(data![Int(pixelData) + 1]) / 255.0
+        let b = CGFloat(data![Int(pixelData) + 2]) / 255.0
+        let a = CGFloat(data![Int(pixelData) + 3]) / 255.0
+        
+        return UIColor(red: r, green: g, blue: b, alpha: a)
+    }
+    
+    // MARK: 1.12、保存图片到相册
+    /// 保存图片到相册
+    func saveImageToPhotoAlbum(_ result: ((Bool)->())?) {
+        self.base.saveToPhotoAlbum(result)
+    }
+    
+    // MARK: 1.13、保存图片到相册(建议使用这个)
+    /// 保存图片到相册
+    func savePhotosImageToAlbum(completion: @escaping ((Bool, Error?) -> Void)) {
+        PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAsset(from: self.base)
+        } completionHandler: { (isSuccess: Bool, error: Error?) in
+            completion(isSuccess, error)
+        }
+    }
+    
+    // MARK: 1.14、图片的模糊效果（高斯模糊滤镜）
+    /// 图片的模糊效果（高斯模糊滤镜）
+    /// - Parameter fuzzyValue: 设置模糊半径值（越大越模糊）
+    /// - Returns: 返回模糊后的图片
+    func getGaussianBlurImage(fuzzyValue: CGFloat = 20) -> UIImage? {
+        // 生成的高斯模糊滤镜图片
+        return blurredPicture(fuzzyValue: fuzzyValue, filterName: "CIGaussianBlur")
+    }
+    
+    // MARK: 1.15、像素化后的图片
+    ///像素化后的图片
+    /// - Parameter fuzzyValue: 设置模糊半径值（越大越模糊）
+    /// - Returns: 返回像素化后的图片
+    func getPixellateImage(fuzzyValue: CGFloat = 20) -> UIImage? {
+        // 生成的高斯模糊滤镜图片
+        return blurredPicture(fuzzyValue: fuzzyValue, filterName: "CIPixellate")
+    }
+    
+    /// 图片模糊
+    /// - Parameters:
+    ///   - fuzzyValue: 设置模糊半径值（越大越模糊）
+    ///   - filterName: 模糊类型
+    /// - Returns: 返回模糊后的图片
+    private func blurredPicture(fuzzyValue: CGFloat, filterName: String) -> UIImage? {
+        guard let ciImage = CIImage(image: self.base) else { return nil }
+        // 创建高斯模糊滤镜类
+        guard let blurFilter = CIFilter(name: filterName) else { return nil }
+        // 设置图片
+        blurFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        // 设置模糊半径值（越大越模糊）
+        blurFilter.setValue(fuzzyValue, forKey: filterName == "CIPixellate" ? kCIInputScaleKey : kCIInputRadiusKey)
+        // 从滤镜中 取出图片
+        guard let outputImage = blurFilter.outputImage else { return nil }
+        // 创建上下文
+        let context = CIContext(options: nil)
+        // 根据滤镜中的图片 创建CGImage
+        guard let cgImage = context.createCGImage(outputImage, from: ciImage.extent) else { return nil }
+        // 生成的模糊图片
+        return UIImage(cgImage: cgImage)
+    }
+    
+    // MARK: 1.16、返回一个将白色背景变透明的UIImage
+    /// 返回一个将白色背景变透明的UIImage
+    /// - Returns: 白色背景变透明的UIImage
+    func imageByRemoveWhiteBg() -> UIImage? {
+        let colorMasking: [CGFloat] = [222, 255, 222, 255, 222, 255]
+        return transparentColor(colorMasking: colorMasking)
+    }
+    
+    // MARK: 1.17、返回一个将黑色背景变透明的UIImage
+    /// 返回一个将黑色背景变透明的UIImage
+    /// - Returns: 黑色背景变透明的UIImage
+    func imageByRemoveBlackBg() -> UIImage? {
+        let colorMasking: [CGFloat] = [0, 32, 0, 32, 0, 32]
+        return transparentColor(colorMasking: colorMasking)
+    }
+    
+    private func transparentColor(colorMasking: [CGFloat]) -> UIImage? {
+        defer {
+            UIGraphicsEndImageContext()
+        }
+        guard let rawImageRef = self.base.cgImage, let maskedImageRef = rawImageRef.copy(maskingColorComponents: colorMasking) else {
+            return nil
+        }
+        UIGraphicsBeginImageContext(self.base.size)
+        guard let context: CGContext = UIGraphicsGetCurrentContext() else {
+            return nil
+        }
+        context.translateBy(x: 0.0, y: self.base.size.height)
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.draw(maskedImageRef, in: CGRect(x: 0, y: 0, width: self.base.size.width, height: self.base.size.height))
+        let result = UIGraphicsGetImageFromCurrentImageContext()
+        return result
+    }
 }
 
-// MARK:- 二、UIColor 生成的图片 和 生成渐变色图片
-public extension UIImage {
+fileprivate extension UIImage {
+    
+    private struct JKRuntimeKey {
+        static let saveBlockKey = UnsafeRawPointer.init(bitPattern: "saveBlock".hashValue)
+    }
+    private var saveBlock: ((Bool)->())? {
+        set {
+            objc_setAssociatedObject(self, JKRuntimeKey.saveBlockKey!, newValue, .OBJC_ASSOCIATION_COPY_NONATOMIC)
+        }
+        get {
+            return objc_getAssociatedObject(self, JKRuntimeKey.saveBlockKey!) as? (Bool) -> ()
+        }
+    }
+    
+    /// 保存图片到相册
+    func saveToPhotoAlbum(_ result: ((Bool)->())?) {
+        saveBlock = result
+        UIImageWriteToSavedPhotosAlbum(self, self, #selector(saveImage(image:didFinishSavingWithError:contextInfo:)), nil)
+    }
+    
+    @objc private func saveImage(image: UIImage, didFinishSavingWithError error: NSError?, contextInfo: AnyObject) {
+        if error != nil{
+            saveBlock?(false)
+        } else {
+            saveBlock?(true)
+        }
+    }
+}
+
+// MARK: - 二、UIColor 生成的图片 和 生成渐变色图片
+public enum JKImageGradientDirection {
+    /// 水平从左到右
+    case horizontal
+    /// 垂直从上到下
+    case vertical
+    /// 左上到右下
+    case leftOblique
+    /// 右上到左下
+    case rightOblique
+    /// 自定义
+    case other(CGPoint, CGPoint)
+    
+    public func point(size: CGSize) -> (CGPoint, CGPoint) {
+        switch self {
+        case .horizontal:
+            return (CGPoint(x: 0, y: 0), CGPoint(x: size.width, y: 0))
+        case .vertical:
+            return (CGPoint(x: 0, y: 0), CGPoint(x: 0, y: size.height))
+        case .leftOblique:
+            return (CGPoint(x: 0, y: 0), CGPoint(x: size.width, y: size.height))
+        case .rightOblique:
+            return (CGPoint(x: size.width, y: 0), CGPoint(x: 0, y: size.height))
+        case .other(let stat, let end):
+            return (stat, end)
+        }
+    }
+}
+public extension JKPOP where Base: UIImage {
     
     // MARK: 2.1、生成指定尺寸的纯色图像
     /// 生成指定尺寸的纯色图像
@@ -283,29 +476,6 @@ public extension UIImage {
         return img
     }
     
-    enum GradientDirection {
-        case horizontal // 水平从左到右
-        case vertical // 垂直从上到下
-        case leftOblique // 左上到右下
-        case rightOblique // 右上到左下
-        case other(CGPoint, CGPoint)
-        
-        public func point(size: CGSize) -> (CGPoint, CGPoint) {
-            switch self {
-            case .horizontal:
-                return (CGPoint.init(x: 0, y: 0), CGPoint.init(x: size.width, y: 0))
-            case .vertical:
-                return (CGPoint.init(x: 0, y: 0), CGPoint.init(x: 0, y: size.height))
-            case .leftOblique:
-                return (CGPoint.init(x: 0, y: 0), CGPoint.init(x: size.width, y: size.height))
-            case .rightOblique:
-                return (CGPoint.init(x: size.width, y: 0), CGPoint.init(x: 0, y: size.height))
-            case .other(let stat, let end):
-                return (stat, end)
-            }
-        }
-    }
-    
     // MARK: 2.3、生成渐变色的图片 ["#B0E0E6", "#00CED1", "#2E8B57"]
     /// 生成渐变色的图片 ["#B0E0E6", "#00CED1", "#2E8B57"]
     /// - Parameters:
@@ -314,7 +484,7 @@ public extension UIImage {
     ///   - locations: locations 数组
     ///   - direction: 渐变的方向
     /// - Returns: 渐变的图片
-    static func gradient(_ hexsString: [String], size: CGSize = CGSize(width: 1, height: 1), locations:[CGFloat]? = nil, direction: GradientDirection = .horizontal) -> UIImage? {
+    static func gradient(_ hexsString: [String], size: CGSize = CGSize(width: 1, height: 1), locations:[CGFloat]? = nil, direction: JKImageGradientDirection = .horizontal) -> UIImage? {
         return gradient(hexsString.map{ UIColor.hexStringColor(hexString: $0) }, size: size, locations: locations, direction: direction)
     }
     
@@ -326,7 +496,7 @@ public extension UIImage {
     ///   - locations: locations 数组
     ///   - direction: 渐变的方向
     /// - Returns: 渐变的图片
-    static func gradient(_ colors: [UIColor], size: CGSize = CGSize(width: 10, height: 10), locations:[CGFloat]? = nil, direction: GradientDirection = .horizontal) -> UIImage? {
+    static func gradient(_ colors: [UIColor], size: CGSize = CGSize(width: 10, height: 10), locations:[CGFloat]? = nil, direction: JKImageGradientDirection = .horizontal) -> UIImage? {
         return gradient(colors, size: size, radius: 0, locations: locations, direction: direction)
     }
     
@@ -343,10 +513,10 @@ public extension UIImage {
                          size: CGSize = CGSize(width: 10, height: 10),
                          radius: CGFloat,
                          locations:[CGFloat]? = nil,
-                         direction: GradientDirection = .horizontal) -> UIImage? {
+                         direction: JKImageGradientDirection = .horizontal) -> UIImage? {
         if colors.count == 0 { return nil }
         if colors.count == 1 {
-            return UIImage.image(color: colors[0])
+            return image(color: colors[0])
         }
         UIGraphicsBeginImageContext(size)
         let context = UIGraphicsGetCurrentContext()
@@ -364,8 +534,8 @@ public extension UIImage {
     }
 }
 
-// MARK:- 三、图片的拉伸和缩放
-public extension UIImage {
+// MARK: - 三、图片的拉伸和缩放
+public extension JKPOP where Base: UIImage {
     
     // MARK: 3.1、获取固定大小的 image
     /// 获取固定大小的image
@@ -374,16 +544,16 @@ public extension UIImage {
     func solidTo(size: CGSize) -> UIImage? {
         let w = size.width
         let h = size.height
-        if self.size.height <= self.size.width {
-            if self.size.width >= w {
-                let scaleImage = fixOrientation().scaleTo(size: CGSize(width: w, height: w * self.size.height / self.size.width))
+        if self.base.size.height <= self.base.size.width {
+            if self.base.size.width >= w {
+                let scaleImage = fixOrientation().jk.scaleTo(size: CGSize(width: w, height: w * self.base.size.height / self.base.size.width))
                 return scaleImage
             } else {
                 return fixOrientation()
             }
         } else {
-            if self.size.height >= h {
-                let scaleImage = fixOrientation().scaleTo(size: CGSize(width: h * self.size.width / self.size.height, height: h))
+            if self.base.size.height >= h {
+                let scaleImage = fixOrientation().jk.scaleTo(size: CGSize(width: h * self.base.size.width / self.base.size.height, height: h))
                 return scaleImage
             } else {
                 return fixOrientation()
@@ -396,12 +566,12 @@ public extension UIImage {
     /// - Parameter scale: 要缩放的 宽高比 系数
     /// - Returns: 等比缩放 后的图片
     func scaleTo(scale: CGFloat) -> UIImage? {
-        let w = self.size.width
-        let h = self.size.height
+        let w = self.base.size.width
+        let h = self.base.size.height
         let scaledW = w * scale
         let scaledH = h * scale
-        UIGraphicsBeginImageContext(size)
-        self.draw(in: CGRect(x: 0, y: 0, width: scaledW, height: scaledH))
+        UIGraphicsBeginImageContext(base.size)
+        self.base.draw(in: CGRect(x: 0, y: 0, width: scaledW, height: scaledH))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         return newImage
@@ -412,9 +582,9 @@ public extension UIImage {
     /// - Parameter size: 要缩放的尺寸
     /// - Returns: 缩放后的图片
     func scaleTo(size: CGSize) -> UIImage? {
-        if self.cgImage == nil { return nil }
-        var w = CGFloat(self.cgImage!.width)
-        var h = CGFloat(self.cgImage!.height)
+        if self.base.cgImage == nil { return nil }
+        var w = CGFloat(self.base.cgImage!.width)
+        var h = CGFloat(self.base.cgImage!.height)
         let verticalRadio = size.height / h
         let horizontalRadio = size.width / w
         var radio: CGFloat = 1
@@ -428,7 +598,7 @@ public extension UIImage {
         let xPos = (size.width - w) / 2
         let yPos = (size.height - h) / 2
         UIGraphicsBeginImageContext(size)
-        draw(in: CGRect(x: xPos, y: yPos, width: w, height: h))
+        base.draw(in: CGRect(x: xPos, y: yPos, width: w, height: h))
         let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         return scaledImage
@@ -438,68 +608,79 @@ public extension UIImage {
     /// 图片中间1*1拉伸——如气泡一般
     /// - Returns: 拉伸后的图片
     func strechAsBubble() -> UIImage {
-        let top = self.size.height * 0.5
-        let left = self.size.width * 0.5
-        let bottom = self.size.height * 0.5
-        let right = self.size.width * 0.5
+        let top = self.base.size.height * 0.5
+        let left = self.base.size.width * 0.5
+        let bottom = self.base.size.height * 0.5
+        let right = self.base.size.width * 0.5
         let edgeInsets = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
         // 拉伸
-        return self.resizableImage(withCapInsets: edgeInsets, resizingMode: .stretch)
+        return self.base.resizableImage(withCapInsets: edgeInsets, resizingMode: .stretch)
     }
     
-    // MARK: 3.5、调整图像方向 避免图像有旋转
+    // MARK: 3.5、图片设置拉伸
+    /// 图片设置拉伸
+    /// - Parameters:
+    ///   - edgeInsets: 拉伸区域
+    ///   - resizingMode: 拉伸模式
+    /// - Returns: 返回拉伸后的图片
+    func strechBubble(edgeInsets: UIEdgeInsets, resizingMode: UIImage.ResizingMode = .stretch) -> UIImage {
+        // 拉伸
+        return self.base.resizableImage(withCapInsets: edgeInsets, resizingMode: resizingMode)
+    }
+    
+    // MARK: 3.6、调整图像方向 避免图像有旋转
     /// 调整图像方向 避免图像有旋转
     /// - Returns: 返正常的图片
     func fixOrientation() -> UIImage {
-        if imageOrientation == .up {
-            return self
+        if base.imageOrientation == .up {
+            return self.base
         }
         var transform: CGAffineTransform = CGAffineTransform.identity
-        switch imageOrientation {
+        switch base.imageOrientation {
         case .down, .downMirrored:
-            transform = transform.translatedBy(x: size.width, y: size.height)
+            transform = transform.translatedBy(x: base.size.width, y: base.size.height)
             transform = transform.rotated(by: .pi)
         case .left, .leftMirrored:
-            transform = transform.translatedBy(x: size.width, y: 0)
+            transform = transform.translatedBy(x: base.size.width, y: 0)
             transform = transform.rotated(by: .pi / 2)
         case .right, .rightMirrored:
-            transform = transform.translatedBy(x: 0, y: size.height)
+            transform = transform.translatedBy(x: 0, y: base.size.height)
             transform = transform.rotated(by: -.pi / 2)
         default:
             break
         }
-        switch imageOrientation {
+        switch base.imageOrientation {
         case .upMirrored, .downMirrored:
-            transform.translatedBy(x: size.width, y: 0)
+            transform.translatedBy(x: base.size.width, y: 0)
             transform.scaledBy(x: -1, y: 1)
         case .leftMirrored, .rightMirrored:
-            transform.translatedBy(x: size.height, y: 0)
+            transform.translatedBy(x: base.size.height, y: 0)
             transform.scaledBy(x: -1, y: 1)
         default:
             break
         }
-        let ctx: CGContext = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: (self.cgImage?.bitsPerComponent)!, bytesPerRow: 0, space: (self.cgImage?.colorSpace)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        let ctx: CGContext = CGContext(data: nil, width: Int(base.size.width), height: Int(base.size.height), bitsPerComponent: (self.base.cgImage?.bitsPerComponent)!, bytesPerRow: 0, space: (self.base.cgImage?.colorSpace)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
         ctx.concatenate(transform)
-        switch imageOrientation {
+        switch base.imageOrientation {
         case .left, .leftMirrored, .right, .rightMirrored:
-            ctx.draw(self.cgImage!, in: CGRect(x: 0, y: 0, width: size.height, height: size.width))
+            ctx.draw(self.base.cgImage!, in: CGRect(x: 0, y: 0, width: base.size.height, height: base.size.width))
         default:
-            ctx.draw(self.cgImage!, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+            ctx.draw(self.base.cgImage!, in: CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height))
         }
         let cgImage: CGImage = ctx.makeImage()!
         return UIImage(cgImage: cgImage)
     }
 }
 
-// MARK:- 四、UIImage 压缩相关
-public extension UIImage {
+// MARK: - 四、UIImage 压缩相关
+public extension JKPOP where Base: UIImage {
     
     // MARK: 4.1、压缩图片
     /// 压缩图片
     /// - Parameter mode: 压缩模式
     /// - Returns: 压缩后Data
     func compress(mode: CompressionMode = .medium) -> Data? {
-        return resizeIO(resizeSize: mode.resize(size))?.compressDataSize(maxSize: mode.maxDataSize)
+        return resizeIO(resizeSize: mode.resize(base.size))?.jk.compressDataSize(maxSize: mode.maxDataSize)
     }
     
     // MARK: 4.2、异步图片压缩
@@ -510,9 +691,9 @@ public extension UIImage {
     ///   - complete: 完成回调(压缩后Data, 调整后分辨率)
     func asyncCompress(mode: CompressionMode = .medium, queue: DispatchQueue = DispatchQueue.global(), complete:@escaping (Data?, CGSize) -> Void) {
         queue.async {
-            let data = self.resizeIO(resizeSize: mode.resize(self.size))?.compressDataSize(maxSize: mode.maxDataSize)
+            let data = resizeIO(resizeSize: mode.resize(self.base.size))?.jk.compressDataSize(maxSize: mode.maxDataSize)
             DispatchQueue.main.async {
-                complete(data, mode.resize(self.size))
+                complete(data, mode.resize(self.base.size))
             }
         }
     }
@@ -524,7 +705,7 @@ public extension UIImage {
     func compressDataSize(maxSize: Int = 1024 * 1024 * 2) -> Data? {
         let maxSize = maxSize
         var quality: CGFloat = 0.8
-        var data = self.jpegData(compressionQuality: quality)
+        var data = self.base.jpegData(compressionQuality: quality)
         var dataCount = data?.count ?? 0
         
         while (data?.count ?? 0) > maxSize {
@@ -532,7 +713,7 @@ public extension UIImage {
                 break
             }
             quality  = quality - 0.05
-            data = self.jpegData(compressionQuality: quality)
+            data = self.base.jpegData(compressionQuality: quality)
             if (data?.count ?? 0) <= dataCount {
                 break
             }
@@ -546,13 +727,13 @@ public extension UIImage {
     /// - Parameter resizeSize: 图片调整Size
     /// - Returns: 调整后图片
     func resizeIO(resizeSize: CGSize) -> UIImage? {
-        if size == resizeSize {
-            return self
+        if base.size == resizeSize {
+            return self.base
         }
-        guard let imageData = pngData() else { return nil }
+        guard let imageData = base.pngData() else { return nil }
         guard let imageSource = CGImageSourceCreateWithData(imageData as CFData, nil) else { return nil }
         
-        let maxPixelSize = max(size.width, size.height)
+        let maxPixelSize = max(base.size.width, base.size.height)
         let options = [kCGImageSourceCreateThumbnailWithTransform: true,
                        kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
                        kCGImageSourceThumbnailMaxPixelSize: maxPixelSize]  as CFDictionary
@@ -569,10 +750,10 @@ public extension UIImage {
     /// - Parameter resizeSize: 图片调整Size
     /// - Returns: 调整后图片
     func resizeCG(resizeSize: CGSize) -> UIImage? {
-        if size == resizeSize {
-            return self
+        if base.size == resizeSize {
+            return self.base
         }
-        guard  let cgImage = self.cgImage else { return nil }
+        guard  let cgImage = self.base.cgImage else { return nil }
         guard  let colorSpace = cgImage.colorSpace else { return nil }
         guard let context = CGContext(data: nil,
                                       width: Int(resizeSize.width),
@@ -664,8 +845,8 @@ public enum CompressionMode {
 }
 
 
-// MARK:- 五、二维码的处理
-public extension UIImage {
+// MARK: - 五、二维码的处理
+public extension JKPOP where Base: UIImage {
     
     // MARK: 5.1、生成二维码图片
     /// 生成二维码图片
@@ -740,7 +921,7 @@ public extension UIImage {
         }
         
         var newLogo: UIImage = logoImage
-        if let newLogoRoundCorner = logoRoundCorner, let roundCornerLogo = logoImage.isRoundCorner(radius: newLogoRoundCorner, byRoundingCorners: .allCorners, imageSize: logoSize) {
+        if let newLogoRoundCorner = logoRoundCorner, let roundCornerLogo = logoImage.jk.isRoundCorner(radius: newLogoRoundCorner, byRoundingCorners: .allCorners, imageSize: logoSize) {
             newLogo = roundCornerLogo
         }
         
@@ -758,9 +939,27 @@ public extension UIImage {
         
         return newPicture
     }
+    
+    // MARK: 5.2、获取图片中二维码数组
+    func getImageQRImage() -> [CIQRCodeFeature] {
+        let qrcodeImg = self.base as UIImage
+        let context = CIContext(options: nil)
+        guard let ciImage: CIImage = CIImage(image:qrcodeImg),
+              let detector = CIDetector(ofType: CIDetectorTypeQRCode, context: context, options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]),
+              let features = detector.features(in: ciImage) as? [CIQRCodeFeature] else {
+            return []
+        }
+        return features
+    }
+    
+    // MARK: 5.3、获取图片每个二维码里面的信息数组
+    func getImageQRImageInfo() -> [String] {
+        // 遍历所有的二维码，并拿出二维码里面的信息
+        return getImageQRImage().map { $0.messageString ?? ""}
+    }
 }
 
-// MARK:- 六、gif 加载
+// MARK: - 六、gif 加载
 public enum DataType: String {
     case gif    = "gif"
     case png    = "png"
@@ -768,7 +967,7 @@ public enum DataType: String {
     case tiff   = "tiff"
     case defaultType
 }
-public extension UIImage {
+public extension JKPOP where Base: UIImage {
     
     // MARK: 6.1、验证资源的格式，返回资源格式（png/gif/jpeg...）
     /// 验证资源的格式，返回资源格式（png/gif/jpeg...）
@@ -799,10 +998,10 @@ public extension UIImage {
     static func gif(data: Data) -> UIImage? {
         // Create source from data
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
-            print("SwiftGif: Source for the image does not exist")
+            JKPrint("SwiftGif: Source for the image does not exist")
             return nil
         }
-        return UIImage.animatedImageWithSource(source)
+        return animatedImageWithSource(source)
     }
     
     // MARK: 6.3、加载网络 url 的 gif 图片
@@ -811,12 +1010,12 @@ public extension UIImage {
     static func gif(url: String) -> UIImage? {
         // Validate URL
         guard let bundleURL = URL(string: url) else {
-            print("SwiftGif: This image named \"\(url)\" does not exist")
+            JKPrint("SwiftGif: This image named \"\(url)\" does not exist")
             return nil
         }
         // Validate data
         guard let imageData = try? Data(contentsOf: bundleURL) else {
-            print("SwiftGif: Cannot turn image named \"\(url)\" into NSData")
+            JKPrint("SwiftGif: Cannot turn image named \"\(url)\" into NSData")
             return nil
         }
         
@@ -830,32 +1029,150 @@ public extension UIImage {
         // Check for existance of gif
         guard let bundleURL = Bundle.main
                 .url(forResource: name, withExtension: "gif") else {
-            print("SwiftGif: This image named \"\(name)\" does not exist")
+            JKPrint("SwiftGif: This image named \"\(name)\" does not exist")
             return nil
         }
         // Validate data
         guard let imageData = try? Data(contentsOf: bundleURL) else {
-            print("SwiftGif: Cannot turn image named \"\(name)\" into NSData")
+            JKPrint("SwiftGif: Cannot turn image named \"\(name)\" into NSData")
             return nil
         }
         
         return gif(data: imageData)
     }
     
-    // MARK: 6.5、加载 asset 里面的图片
-    /// 加载 asset 里面的图片
+    // MARK: 6.5、加载 asset 里面的gif图片
+    /// 加载 asset 里面的gif图片
     /// - Parameter asset: asset 里面的图片名字
     @available(iOS 9.0, *)
     static func gif(asset: String) -> UIImage? {
         // Create source from assets catalog
         guard let dataAsset = NSDataAsset(name: asset) else {
-            print("SwiftGif: Cannot turn image named \"\(asset)\" into NSDataAsset")
+            JKPrint("SwiftGif: Cannot turn image named \"\(asset)\" into NSDataAsset")
             return nil
         }
         return gif(data: dataAsset.data)
     }
     
-    private class func delayForImageAtIndex(_ index: Int, source: CGImageSource!) -> Double {
+    // MARK: 6.6、获取 asset 里面的gif图片的信息：包含分解后的图片和gif时间
+    /// 获取 asset 里面的gif图片的信息：包含分解后的图片和gif时间
+    /// - Parameter asset: asset 里面的图片名字
+    /// - Returns: 分解后的图片和gif时间
+    static func gifImages(asset: String) -> (gifImages: [UIImage]?, duration: TimeInterval?) {
+        // Create source from assets catalog
+        guard let dataAsset = NSDataAsset(name: asset) else {
+            JKPrint("SwiftGif: Cannot turn image named \"\(asset)\" into NSDataAsset")
+            return (nil, nil)
+        }
+        // Create source from data
+        guard let source = CGImageSourceCreateWithData(dataAsset.data as CFData, nil) else {
+            JKPrint("SwiftGif: Source for the image does not exist")
+            return (nil, nil)
+        }
+        return animatedImageSources(source)
+    }
+    
+    // MARK: 6.7、获取 加载本地的 的gif图片的信息：包含分解后的图片和gif时间
+    /// 获取 加载本地的 的gif图片的信息：包含分解后的图片和gif时间
+    /// - Parameter name:图片的名字
+    /// - Returns: 分解后的图片和gif时间
+    static func gifImages(name: String) -> (gifImages: [UIImage]?, duration: TimeInterval?) {
+        // Check for existance of gif
+        guard let bundleURL = Bundle.main
+                .url(forResource: name, withExtension: "gif") else {
+            JKPrint("SwiftGif: This image named \"\(name)\" does not exist")
+            return (nil, nil)
+        }
+        // Validate data
+        guard let imageData = try? Data(contentsOf: bundleURL) else {
+            JKPrint("SwiftGif: Cannot turn image named \"\(name)\" into NSData")
+            return (nil, nil)
+        }
+        // Create source from data
+        guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
+            JKPrint("SwiftGif: Source for the image does not exist")
+            return (nil, nil)
+        }
+        return animatedImageSources(source)
+    }
+    
+    // MARK: 6.8、获取 网络 url 的 gif 图片的信息：包含分解后的图片和gif时间
+    /// 获取 网络 url 的 gif 图片的信息：包含分解后的图片和gif时间
+    /// - Parameter url: gif图片的网络地址
+    /// - Returns: 分解后的图片和gif时间
+    static func gifImages(url: String) -> (gifImages: [UIImage]?, duration: TimeInterval?) {
+        // Validate URL
+        guard let bundleURL = URL(string: url) else {
+            JKPrint("SwiftGif: This image named \"\(url)\" does not exist")
+            return (nil, nil)
+        }
+        // Validate data
+        guard let imageData = try? Data(contentsOf: bundleURL) else {
+            JKPrint("SwiftGif: Cannot turn image named \"\(url)\" into NSData")
+            return (nil, nil)
+        }
+        // Create source from data
+        guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
+            JKPrint("SwiftGif: Source for the image does not exist")
+            return (nil, nil)
+        }
+        return animatedImageSources(source)
+    }
+    
+    // MARK: 获取gif图片转化为动画的Image
+    private static func animatedImageWithSource(_ source: CGImageSource) -> UIImage? {
+        let info = animatedImageSources(source)
+        guard let frames = info.gifImages, let duration = info.duration else {
+            return nil
+        }
+        let animation = UIImage.animatedImage(with: frames, duration: duration)
+        return animation
+    }
+    
+    // MARK: 获取gif图片的信息
+    /// 获取gif图片的信息
+    /// - Parameter source: CGImageSource 资源
+    /// - Returns: gif信息
+    private static func animatedImageSources(_ source: CGImageSource) -> (gifImages: [UIImage]?, duration: TimeInterval?) {
+        let count = CGImageSourceGetCount(source)
+        var images = [CGImage]()
+        var delays = [Int]()
+        // Fill arrays
+        for index in 0..<count {
+            // Add image
+            if let image = CGImageSourceCreateImageAtIndex(source, index, nil) {
+                images.append(image)
+            }
+            // At it's delay in cs
+            let delaySeconds = delayForImageAtIndex(Int(index), source: source)
+            // Seconds to ms
+            delays.append(Int(delaySeconds * 1000.0))
+        }
+        
+        // Calculate full duration
+        let duration: Int = {
+            var sum = 0
+            for val: Int in delays {
+                sum += val
+            }
+            return sum
+        }()
+        // Get frames
+        let gcd = gcdForArray(delays)
+        var frames = [UIImage]()
+        var frame: UIImage
+        var frameCount: Int
+        for index in 0..<count {
+            frame = UIImage(cgImage: images[Int(index)])
+            frameCount = Int(delays[Int(index)] / gcd)
+            for _ in 0..<frameCount {
+                frames.append(frame)
+            }
+        }
+        return (frames, Double(duration) / 1000.0)
+    }
+    
+    private static func delayForImageAtIndex(_ index: Int, source: CGImageSource!) -> Double {
         var delay = 0.1
         // Get dictionaries
         let cfProperties = CGImageSourceCopyPropertiesAtIndex(source, index, nil)
@@ -870,12 +1187,10 @@ public extension UIImage {
         let gifProperties: CFDictionary = unsafeBitCast(gifPropertiesPointer.pointee, to: CFDictionary.self)
         // Get delay time
         var delayObject: AnyObject = unsafeBitCast(
-            CFDictionaryGetValue(gifProperties,
-                                 Unmanaged.passUnretained(kCGImagePropertyGIFUnclampedDelayTime).toOpaque()),
+            CFDictionaryGetValue(gifProperties, Unmanaged.passUnretained(kCGImagePropertyGIFUnclampedDelayTime).toOpaque()),
             to: AnyObject.self)
         if delayObject.doubleValue == 0 {
-            delayObject = unsafeBitCast(CFDictionaryGetValue(gifProperties,
-                                                             Unmanaged.passUnretained(kCGImagePropertyGIFDelayTime).toOpaque()), to: AnyObject.self)
+            delayObject = unsafeBitCast(CFDictionaryGetValue(gifProperties, Unmanaged.passUnretained(kCGImagePropertyGIFDelayTime).toOpaque()), to: AnyObject.self)
         }
         if let delayObject = delayObject as? Double, delayObject > 0 {
             delay = delayObject
@@ -884,6 +1199,17 @@ public extension UIImage {
             delay = 0.1
         }
         return delay
+    }
+    
+    private static func gcdForArray(_ array: [Int]) -> Int {
+        if array.isEmpty {
+            return 1
+        }
+        var gcd = array[0]
+        for val in array {
+            gcd = gcdForPair(val, gcd)
+        }
+        return gcd
     }
     
     private static func gcdForPair(_ lhs: Int?, _ rhs: Int?) -> Int {
@@ -917,64 +1243,10 @@ public extension UIImage {
             }
         }
     }
-    
-    private static func gcdForArray(_ array: [Int]) -> Int {
-        if array.isEmpty {
-            return 1
-        }
-        var gcd = array[0]
-        for val in array {
-            gcd = UIImage.gcdForPair(val, gcd)
-        }
-        return gcd
-    }
-    
-    private static func animatedImageWithSource(_ source: CGImageSource) -> UIImage? {
-        let count = CGImageSourceGetCount(source)
-        var images = [CGImage]()
-        var delays = [Int]()
-        // Fill arrays
-        for index in 0..<count {
-            // Add image
-            if let image = CGImageSourceCreateImageAtIndex(source, index, nil) {
-                images.append(image)
-            }
-            // At it's delay in cs
-            let delaySeconds = UIImage.delayForImageAtIndex(Int(index),
-                                                            source: source)
-            delays.append(Int(delaySeconds * 1000.0)) // Seconds to ms
-        }
-        
-        // Calculate full duration
-        let duration: Int = {
-            var sum = 0
-            for val: Int in delays {
-                sum += val
-            }
-            return sum
-        }()
-        // Get frames
-        let gcd = gcdForArray(delays)
-        var frames = [UIImage]()
-        var frame: UIImage
-        var frameCount: Int
-        for index in 0..<count {
-            frame = UIImage(cgImage: images[Int(index)])
-            frameCount = Int(delays[Int(index)] / gcd)
-            
-            for _ in 0..<frameCount {
-                frames.append(frame)
-            }
-        }
-        // Heyhey
-        let animation = UIImage.animatedImage(with: frames,
-                                              duration: Double(duration) / 1000.0)
-        return animation
-    }
 }
 
-// MARK:- 七、图片旋转的一些操作
-public extension UIImage {
+// MARK: - 七、图片旋转的一些操作
+public extension JKPOP where Base: UIImage {
     
     // MARK: 7.1、图片旋转 (角度)
     /// 图片旋转 (角度)
@@ -990,10 +1262,10 @@ public extension UIImage {
     /// - Parameter radians: 弧度 0 -- 2π
     /// - Returns: 旋转后的图片
     func imageRotated(radians: CGFloat) -> UIImage? {
-        guard let weakCGImage = self.cgImage else {
+        guard let weakCGImage = self.base.cgImage else {
             return nil
         }
-        let rotateViewBox = UIView(frame: CGRect(origin: CGPoint.zero, size: self.size))
+        let rotateViewBox = UIView(frame: CGRect(origin: CGPoint.zero, size: self.base.size))
         let transform: CGAffineTransform = CGAffineTransform(rotationAngle: radians)
         rotateViewBox.transform = transform
         UIGraphicsBeginImageContext(rotateViewBox.frame.size)
@@ -1004,7 +1276,7 @@ public extension UIImage {
         context.translateBy(x: rotateViewBox.frame.width / 2, y: rotateViewBox.frame.height / 2)
         context.rotate(by: radians)
         context.scaleBy(x: 1, y: -1)
-        let rect = CGRect(x: -self.size.width / 2, y: -self.size.height / 2, width: self.size.width, height: self.size.height)
+        let rect = CGRect(x: -self.base.size.width / 2, y: -self.base.size.height / 2, width: self.base.size.width, height: self.base.size.height)
         context.draw(weakCGImage, in: rect)
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
@@ -1024,21 +1296,21 @@ public extension UIImage {
     func flipVertical() -> UIImage? {
         return self.rotate(orientation: .downMirrored)
     }
-
+    
     // MARK: 7.5、向下翻转
     /// 向下翻转
     /// - Returns: 向下翻转后的图片
     func flipDown() -> UIImage? {
         return self.rotate(orientation: .down)
     }
-
+    
     // MARK: 7.6、向左翻转
     /// 向左翻转
     /// - Returns: 向左翻转后的图片
     func flipLeft() -> UIImage? {
         return self.rotate(orientation: .left)
     }
-
+    
     // MARK: 7.7、镜像向左翻转
     /// 镜像向左翻转
     /// - Returns: 镜像向左翻转后的图片
@@ -1066,7 +1338,7 @@ public extension UIImage {
     /// - Returns: 平铺后的图片
     func imageTile(size: CGSize) -> UIImage? {
         let tempView = UIView(frame: CGRect(origin: CGPoint.zero, size: size))
-        tempView.backgroundColor = UIColor(patternImage: self)
+        tempView.backgroundColor = UIColor(patternImage: self.base)
         UIGraphicsBeginImageContext(size)
         guard let context = UIGraphicsGetCurrentContext() else {
             UIGraphicsEndImageContext()
@@ -1083,7 +1355,7 @@ public extension UIImage {
     /// - Parameter orientation: 翻转类型
     /// - Returns: 翻转后的图片
     private func rotate(orientation: UIImage.Orientation) -> UIImage? {
-        guard let imageRef = self.cgImage else {
+        guard let imageRef = self.base.cgImage else {
             return nil
         }
         let rect = CGRect(x: 0, y: 0, width: imageRef.width, height: imageRef.height)
@@ -1092,7 +1364,7 @@ public extension UIImage {
         
         switch orientation {
         case .up:
-            return self
+            return self.base
         case .upMirrored:
             // 图片左平移width个像素
             transform = CGAffineTransform(translationX: rect.size.width, y: 0)
@@ -1151,12 +1423,193 @@ public extension UIImage {
         UIGraphicsEndImageContext()
         return newImage
     }
-
+    
     /// 交换宽高
     /// - Parameter rect: image 的 frame
     private func swapWidthAndHeight(rect: inout CGRect) {
         let swap = rect.size.width
         rect.size.width = rect.size.height
         rect.size.height = swap
+    }
+}
+
+// MARK: - 八、给图片添加滤镜效果（棕褐色老照片滤镜，黑白滤镜）
+/**
+ Core Image 是一个强大的滤镜处理框架。它除了可以直接给图片添加各种内置滤镜，还能精确地修改鲜艳程度, 色泽, 曝光等，下面通过两个样例演示如何给 UIImage 添加滤镜
+ */
+public extension JKPOP where Base: UIImage {
+    /// 滤镜类型
+    enum JKImageFilterType: String {
+        /// 棕褐色复古滤镜（老照片效果），有点复古老照片发黄的效果）
+        case CISepiaTone = "CISepiaTone"
+        /// 黑白效果滤镜
+        case CIPhotoEffectNoir = "CIPhotoEffectNoir"
+    }
+    
+    // MARK: 8.1、图片加滤镜
+    /// 图片加滤镜
+    /// - Parameters:
+    ///   - filterType: 滤镜类型
+    ///   - alpha: 透明度
+    /// - Returns: 添加滤镜后的图片
+    func filter(filterType: JKImageFilterType, alpha: CGFloat?) -> UIImage? {
+        guard let imageData = self.base.pngData() else {
+            return nil
+        }
+        let inputImage = CoreImage.CIImage(data: imageData)
+        let context = CIContext(options: nil)
+        guard let filter = CIFilter(name: filterType.rawValue) else {
+            return nil
+        }
+        filter.setValue(inputImage, forKey: kCIInputImageKey)
+        if alpha != nil {
+            filter.setValue(alpha, forKey: "inputIntensity")
+        }
+        guard let outputImage = filter.outputImage, let outImage = context.createCGImage(outputImage, from: outputImage.extent) else {
+            return nil
+        }
+        return UIImage(cgImage: outImage)
+    }
+    
+    // MARK: 8.2、全图马赛克
+    /// 全图马赛克
+    /// - Parameter value: 值越大马赛克就越大(使用默认)
+    /// - Returns: 全图马赛克的图片
+    func pixAll(value: Int? = nil) -> UIImage? {
+        guard let filter = CIFilter(name: "CIPixellate") else {
+            return nil
+        }
+        let context = CIContext(options: nil)
+        let inputImage = CIImage(image: self.base)
+        filter.setValue(inputImage, forKey: kCIInputImageKey)
+        if value != nil {
+            // 值越大马赛克就越大(使用默认)
+            filter.setValue(value, forKey: kCIInputScaleKey)
+        }
+        let fullPixellatedImage = filter.outputImage
+        let cgImage = context.createCGImage(fullPixellatedImage!, from: fullPixellatedImage!.extent)
+        return UIImage(cgImage: cgImage!)
+    }
+    
+    // MARK: 8.3、检测人脸的frame
+    // 检测人脸的frame
+    func detectFace() -> [CGRect]? {
+        guard let inputImage = CIImage(image: self.base) else {
+            return nil
+        }
+        let context = CIContext(options: nil)
+        // 人脸检测器
+        // CIDetectorAccuracyHigh: 检测的精度高,但速度更慢些
+        let detector = CIDetector(ofType: CIDetectorTypeFace,
+                                  context: context,
+                                  options: [CIDetectorAccuracy: CIDetectorAccuracyHigh])
+        var faceFeatures: [CIFaceFeature]!
+        // 人脸检测需要图片方向(有元数据的话使用元数据,没有就调用featuresInImage)
+        if let orientation = inputImage.properties[kCGImagePropertyOrientation as String] {
+            faceFeatures = (detector!.features(in: inputImage, options: [CIDetectorImageOrientation: orientation]) as! [CIFaceFeature])
+        } else {
+            faceFeatures = (detector!.features(in: inputImage) as! [CIFaceFeature])
+        }
+        // 打印所有的面部特征
+        // print(faceFeatures)
+        let inputImageSize = inputImage.extent.size
+        var transform = CGAffineTransform.identity
+        transform = transform.scaledBy(x: 1, y: -1)
+        transform = transform.translatedBy(x: 0, y: -inputImageSize.height)
+        
+        // 人脸位置的frame
+        var rects: [CGRect] = []
+        // 遍历所有的面部，并框出
+        for faceFeature in faceFeatures {
+            let faceViewBounds = faceFeature.bounds.applying(transform)
+            rects.append(faceViewBounds)
+        }
+        return rects
+    }
+    
+    // MARK: 8.4、检测人脸并打马赛克
+    /// 检测人脸并打马赛克
+    /// - Returns: 打马赛克后的人脸
+    func detectAndPixFace() -> UIImage? {
+        guard let inputImage = CIImage(image: self.base) else {
+            return nil
+        }
+        let context = CIContext(options: nil)
+        
+        // 用CIPixellate滤镜对原图先做个完全马赛克
+        let filter = CIFilter(name: "CIPixellate")!
+        filter.setValue(inputImage, forKey: kCIInputImageKey)
+        let inputScale = max(inputImage.extent.size.width, inputImage.extent.size.height) / 80
+        filter.setValue(inputScale, forKey: kCIInputScaleKey)
+        let fullPixellatedImage = filter.outputImage
+        // 检测人脸，并保存在faceFeatures中
+        guard let detector = CIDetector(ofType: CIDetectorTypeFace,
+                                       context: context,
+                                       options: nil) else {
+            return nil
+        }
+        let faceFeatures = detector.features(in: inputImage)
+        // 初始化蒙版图，并开始遍历检测到的所有人脸
+        var maskImage: CIImage!
+        for faceFeature in faceFeatures {
+            JKPrint(faceFeature.bounds)
+            // 基于人脸的位置，为每一张脸都单独创建一个蒙版，所以要先计算出脸的中心点，对应为x、y轴坐标，
+            // 再基于脸的宽度或高度给一个半径，最后用这些计算结果初始化一个CIRadialGradient滤镜
+            let centerX = faceFeature.bounds.origin.x + faceFeature.bounds.size.width / 2
+            let centerY = faceFeature.bounds.origin.y + faceFeature.bounds.size.height / 2
+            let radius = min(faceFeature.bounds.size.width, faceFeature.bounds.size.height)
+            guard let radialGradient = CIFilter(name: "CIRadialGradient",
+                                                parameters: [
+                                                  "inputRadius0" : radius,
+                                                  "inputRadius1" : radius + 1,
+                                                   "inputColor0" : CIColor(red: 0, green: 1, blue: 0, alpha: 1),
+                                                   "inputColor1" : CIColor(red: 0, green: 0, blue: 0, alpha: 0),
+                                               kCIInputCenterKey : CIVector(x: centerX, y: centerY)
+                                                ]) else {
+                return nil
+            }
+            // 由于CIRadialGradient滤镜创建的是一张无限大小的图，所以在使用之前先对它进行裁剪
+            let radialGradientOutputImage = radialGradient.outputImage!.cropped(to: inputImage.extent)
+            if maskImage == nil {
+                maskImage = radialGradientOutputImage
+            } else {
+                maskImage = CIFilter(name: "CISourceOverCompositing",
+                                     parameters: [
+                                        kCIInputImageKey : radialGradientOutputImage,
+                                        kCIInputBackgroundImageKey : maskImage as Any
+                                     ])!.outputImage
+            }
+        }
+        // 用CIBlendWithMask滤镜把马赛克图、原图、蒙版图混合起来
+        let blendFilter = CIFilter(name: "CIBlendWithMask")!
+        blendFilter.setValue(fullPixellatedImage, forKey: kCIInputImageKey)
+        blendFilter.setValue(inputImage, forKey: kCIInputBackgroundImageKey)
+        blendFilter.setValue(maskImage, forKey: kCIInputMaskImageKey)
+        // 输出，在界面上显示
+        guard let blendOutputImage = blendFilter.outputImage, let blendCGImage = context.createCGImage(blendOutputImage, from: blendOutputImage.extent) else {
+            return nil
+        }
+        return UIImage(cgImage: blendCGImage)
+    }
+}
+
+// MARK: - 九、动态图片的使用
+public extension JKPOP where Base: UIImage {
+
+    // MARK: 9.1、深色图片和浅色图片切换 （深色模式适配）
+    /// 深色图片和浅色图片切换 （深色模式适配）
+    /// - Parameters:
+    ///   - light: 浅色图片
+    ///   - dark: 深色图片
+    /// - Returns: 最终图片
+    static func image(light: UIImage?, dark: UIImage?) -> UIImage? {
+        if #available(iOS 13.0, *) {
+            guard let weakLight = light, let weakDark = dark, let config = weakLight.configuration else { return light }
+            let lightImage = weakLight.withConfiguration(config.withTraitCollection(UITraitCollection.init(userInterfaceStyle: UIUserInterfaceStyle.light)))
+            lightImage.imageAsset?.register(weakDark, with: config.withTraitCollection(UITraitCollection(userInterfaceStyle: UIUserInterfaceStyle.dark)))
+            return lightImage.imageAsset?.image(with: UITraitCollection.current) ?? light
+        } else {
+            return light
+        }
     }
 }

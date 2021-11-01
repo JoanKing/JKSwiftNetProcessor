@@ -7,17 +7,17 @@
 
 import UIKit
 
-// MARK:- 一、基本的扩展
-public extension UITextField {
+// MARK: - 一、基本的扩展
+public extension JKPOP where Base: UITextField {
     
     // MARK: 1.1、添加左边的内边距
     /// 添加左边的内边距
     /// - Parameter padding: 边距
     func addLeftTextPadding(_ padding: CGFloat) {
         let leftView = UIView()
-        leftView.frame = CGRect(x: 0, y: 0, width: padding, height: frame.height)
-        self.leftView = leftView
-        self.leftViewMode = UITextField.ViewMode.always
+        leftView.frame = CGRect(x: 0, y: 0, width: padding, height: base.frame.height)
+        self.base.leftView = leftView
+        self.base.leftViewMode = UITextField.ViewMode.always
     }
     
     // MARK: 1.2、添加左边的图片
@@ -28,14 +28,13 @@ public extension UITextField {
     ///   - imageSize: 图片的大小
     func addLeftIcon(_ image: UIImage?, leftViewFrame: CGRect, imageSize: CGSize) {
         let leftView = UIView()
-        leftView.backgroundColor = .randomColor
         leftView.frame = leftViewFrame
         let imgageView = UIImageView()
         imgageView.frame = CGRect(x: leftViewFrame.width - 8 - imageSize.width, y: (leftViewFrame.height - imageSize.height) / 2, width: imageSize.width, height: imageSize.height)
         imgageView.image = image
         leftView.addSubview(imgageView)
-        self.leftView = leftView
-        self.leftViewMode = UITextField.ViewMode.always
+        self.base.leftView = leftView
+        self.base.leftViewMode = UITextField.ViewMode.always
     }
     
     /// 判断的方式
@@ -52,49 +51,79 @@ public extension UITextField {
         case lessThanOrEqualTo
     }
     
-    // MARK: 1.3、验证UITextField中字符长度
-    /// 验证UITextField中字符长度
-    /// - Parameters:
-    ///   - count: 字符数量
-    ///   - option: 所需条件
-    /// - Returns: 返回结果
-    @discardableResult
-    func validateLength(ofCount count: Int, option: UITextField.textFieldValidationOptions) -> Bool {
-        switch option {
-        case .equalTo:
-            return self.text!.count == count
-        case .greaterThan:
-            return self.text!.count > count
-        case .greaterThanOrEqualTo:
-            return self.text!.count >= count
-        case .lessThan:
-            return self.text!.count < count
-        case .lessThanOrEqualTo:
-            return self.text!.count <= count
-        }
-    }
-    
-    // MARK: 1.4、是否都是数字
+    // MARK: 1.3、是否都是数字
     /// 是否都是数字
     /// - Returns: 返回结果
     func validateDigits() -> Bool {
         let digitsRegEx = "[0-9]*"
         let digitsTest = NSPredicate(format: "SELF MATCHES %@", digitsRegEx)
-        return digitsTest.evaluate(with: self.text)
+        return digitsTest.evaluate(with: self.base.text)
     }
     
-    // MARK: 1.5、设置富文本的占位符
+    // MARK: 1.4、设置富文本的占位符
     /// 设置富文本的占位符
     /// - Parameters:
     ///   - font: 字体的大小
     ///   - color: 字体的颜色
     func setPlaceholderAttribute(font: UIFont, color: UIColor = .black) {
-        let arrStr = NSMutableAttributedString(string: self.placeholder ?? "", attributes: [NSAttributedString.Key.foregroundColor: color, NSAttributedString.Key.font: font])
-        self.attributedPlaceholder = arrStr
+        let arrStr = NSMutableAttributedString(string: self.base.placeholder ?? "", attributes: [NSAttributedString.Key.foregroundColor: color, NSAttributedString.Key.font: font])
+        self.base.attributedPlaceholder = arrStr
+    }
+    
+    // MARK: 1.5、限制字数的输入(提示在：- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string; 里面调用)
+    /// 限制字数的输入
+    /// - Parameters:
+    ///   - range: 范围
+    ///   - text: 输入的文字
+    ///   - maxCharacters: 限制字数
+    ///   - regex: 可输入内容(正则)
+    /// - Returns: 返回是否可输入
+    func inputRestrictions(shouldChangeTextIn range: NSRange, replacementText text: String, maxCharacters: Int, regex: String?) -> Bool {
+        guard !text.isEmpty else {
+            return true
+        }
+        
+        guard let oldContent = self.base.text else {
+            return false
+        }
+        
+        if let _ = self.base.markedTextRange {
+             // 有高亮
+            if range.length == 0 {
+                // 联想中
+                return oldContent.count + 1 <= maxCharacters
+            } else {
+                // 正则的判断
+                if let weakRegex = regex, !JKRegexHelper.match(text, pattern: weakRegex) {
+                    return false
+                }
+                // 联想选中键盘
+                let allContent = oldContent.jk.sub(to: range.location) + text
+                if allContent.count > maxCharacters  {
+                    let newContent = allContent.jk.sub(to: maxCharacters)
+                    // print("content1：\(allContent) content2：\(newContent)")
+                    self.base.text = newContent
+                    return false
+                }
+            }
+        } else {
+            guard !text.jk.isNineKeyBoard() else {
+                return true
+            }
+            // 正则的判断
+            if let weakRegex = regex, !JKRegexHelper.match(text, pattern: weakRegex) {
+                return false
+            }
+            // 2、如果数字大于指定位数，不能输入
+            guard oldContent.count + text.count <= maxCharacters else {
+                return false
+            }
+        }
+        return true
     }
 }
 
-// MARK:- 二、链式编程
+// MARK: - 二、链式编程
 public extension UITextField {
     
     // MARK: 2.1、设置文字
@@ -194,6 +223,15 @@ public extension UITextField {
     @discardableResult
     func delegate(_ delegate: UITextFieldDelegate) -> Self {
         self.delegate = delegate
+        return self
+    }
+    // MARK: 2.11、设置键盘样式
+    /// 设置代理
+    /// - Parameter keyboardType: 键盘样式
+    /// - Returns: 返回自身
+    @discardableResult
+    func keyboardType(_ keyboardType: UIKeyboardType) -> Self {
+        self.keyboardType = keyboardType
         return self
     }
 }

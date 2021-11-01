@@ -7,8 +7,10 @@
 
 import UIKit
 import Foundation
+import AVKit
 
-// MARK:- 一、沙盒路径的获取
+extension FileManager: JKPOPCompatible {}
+// MARK: - 一、沙盒路径的获取
 /*
  - 1、Home(应用程序包)目录
  - 整个应用程序各文档所在的目录,包含了所有的资源文件和可执行文件
@@ -44,7 +46,7 @@ public enum BasePath {
     case Tmp
 }
 
-public extension FileManager {
+public extension JKPOP where Base: FileManager {
     // MARK: 1.1、获取Home的完整路径名
     /// 获取Home的完整路径名
     /// - Returns: Home的完整路径名
@@ -117,8 +119,8 @@ public extension FileManager {
     }
 }
 
-// MARK:- 二、文件以及文件夹的操作 扩展
-public extension FileManager {
+// MARK: - 二、文件以及文件夹的操作 扩展
+public extension JKPOP where Base: FileManager {
     // MARK: 文件写入的类型
     /// 文件写入的类型
     enum FileWriteType {
@@ -297,12 +299,12 @@ public extension FileManager {
             guard let readString = String(data: data, encoding: String.Encoding.utf8) else {
                 return (false, nil, "读取内容失败")
             }
-            return (true, readString.jsonStringToArray(), "")
+            return (true, readString.jk.jsonStringToArray(), "")
         case .DictionaryType:
             guard let readString = String(data: data, encoding: String.Encoding.utf8) else {
                 return (false, nil, "读取内容失败")
             }
-            return (true, readString.jsonStringToDictionary(), "")
+            return (true, readString.jk.jsonStringToDictionary(), "")
         }
     }
     
@@ -408,7 +410,17 @@ public extension FileManager {
         return fileManager.isReadableFile(atPath: path)
     }
     
-    // MARK: 2.14、根据文件路径获取文件扩展类型
+    // MARK: 2.14、判断目录是否可执行
+    static func judegeIsExecutableFile(path: String) -> Bool {
+        return fileManager.isExecutableFile(atPath: path)
+    }
+    
+    // MARK: 2.15、判断目录是否可删除
+    static func judegeIsDeletableFile(path: String) -> Bool {
+        return fileManager.isDeletableFile(atPath: path)
+    }
+    
+    // MARK: 2.16、根据文件路径获取文件扩展类型
     /// 根据文件路径获取文件扩展类型
     /// - Parameter path: 文件路径
     /// - Returns: 文件扩展类型
@@ -416,7 +428,7 @@ public extension FileManager {
         return (path as NSString).pathExtension
     }
     
-    // MARK: 2.15、根据文件路径获取文件名称，是否需要后缀
+    // MARK: 2.17、根据文件路径获取文件名称，是否需要后缀
     /// 根据文件路径获取文件名称，是否需要后缀
     /// - Parameters:
     ///   - path: 文件路径
@@ -431,7 +443,7 @@ public extension FileManager {
         return fileName
     }
     
-    // MARK: 2.16、对指定路径执行浅搜索，返回指定目录路径下的文件、子目录及符号链接的列表(只寻找一层)
+    // MARK: 2.18、对指定路径执行浅搜索，返回指定目录路径下的文件、子目录及符号链接的列表(只寻找一层)
     /// 对指定路径执行浅搜索，返回指定目录路径下的文件、子目录及符号链接的列表(只寻找一层)
     /// - Parameter folderPath: 建搜索的lujing
     /// - Returns: 指定目录路径下的文件、子目录及符号链接的列表
@@ -442,7 +454,7 @@ public extension FileManager {
         return contentsOfDirectoryArray
     }
     
-    // MARK: 2.17、深度遍历，会递归遍历子文件夹（包括符号链接，所以要求性能的话用enumeratorAtPath）
+    // MARK: 2.19、深度遍历，会递归遍历子文件夹（包括符号链接，所以要求性能的话用enumeratorAtPath）
     /**深度遍历，会递归遍历子文件夹（包括符号链接，所以要求性能的话用enumeratorAtPath）*/
     static func getAllFileNames(folderPath: String) -> Array<String>? {
         // 查看文件夹是否存在，如果存在就直接读取，不存在就直接反空
@@ -452,7 +464,7 @@ public extension FileManager {
         return subPaths
     }
     
-    // MARK: 2.18、深度遍历，会递归遍历子文件夹（但不会递归符号链接）
+    // MARK: 2.20、深度遍历，会递归遍历子文件夹（但不会递归符号链接）
     /** 对指定路径深度遍历，会递归遍历子文件夹（但不会递归符号链接））*/
     static func deepSearchAllFiles(folderPath: String) -> Array<Any>? {
         // 查看文件夹是否存在，如果存在就直接读取，不存在就直接反空
@@ -462,7 +474,7 @@ public extension FileManager {
         return contentsOfPathArray.allObjects
     }
     
-    // MARK: 2.19、计算单个 (文件夹/文件) 的大小，单位为字节(bytes) （没有进行转换的）
+    // MARK: 2.21、计算单个 (文件夹/文件) 的大小，单位为字节(bytes) （没有进行转换的）
     /// 计算单个 (文件夹/文件) 的大小，单位为字节 （没有进行转换的）
     /// - Parameter filePath: (文件夹/文件) 路径
     /// - Returns: 单个文件或文件夹的大小
@@ -478,7 +490,7 @@ public extension FileManager {
         return fileSizeValue
     }
     
-    //MARK: 2.20、计算 (文件夹/文件) 的大小（转换过的）
+    //MARK: 2.22、计算 (文件夹/文件) 的大小（转换过的）
     /// 计算 (文件夹/文件) 的大小
     /// - Parameter path: (文件夹/文件) 的路径
     /// - Returns: (文件夹/文件) 的大小
@@ -501,7 +513,7 @@ public extension FileManager {
         return covertUInt64ToString(with: fileSize)
     }
 
-    // MARK: 2.21、获取(文件夹/文件)属性集合
+    // MARK: 2.23、获取(文件夹/文件)属性集合
     ///  获取(文件夹/文件)属性集合
     /// - Parameter path: (文件夹/文件)路径
     /// - Returns: (文件夹/文件)属性集合
@@ -547,16 +559,26 @@ public extension FileManager {
         public static let systemFreeNodes:
         */
     }
+    
+    // MARK: 2.24、文件/文件夹比较 是否一样
+    static func isEqual(filePath1: String, filePath2: String) -> Bool {
+        // 先判断是否存在路径
+        guard judgeFileOrFolderExists(filePath: filePath1), judgeFileOrFolderExists(filePath: filePath2) else {
+            return false
+        }
+        // 下面比较用户文档中前面两个文件是否内容相同（该方法也可以用来比较目录）
+        return fileManager.contentsEqual(atPath: filePath1, andPath: filePath2)
+    }
 }
 
-// MARK:- fileprivate
-extension FileManager {
+// MARK: fileprivate
+public extension JKPOP where Base: FileManager {
     
     // MARK: 计算文件大小：UInt64 -> String
     /// 计算文件大小：UInt64 -> String
     /// - Parameter size: 文件的大小
     /// - Returns: 转换后的文件大小
-    fileprivate static func covertUInt64ToString(with size: UInt64) -> String {
+    static func covertUInt64ToString(with size: UInt64) -> String {
         var convertedValue: Double = Double(size)
         var multiplyFactor = 0
         let tokens = ["bytes", "KB", "MB", "GB", "TB", "PB",  "EB",  "ZB", "YB"]
@@ -567,3 +589,124 @@ extension FileManager {
         return String(format: "%4.2f %@", convertedValue, tokens[multiplyFactor])
     }
 }
+
+// MARK: - 三、有关视频缩略图获取的扩展
+// 视频URL的类型
+enum JKVideoUrlType {
+    // 本地
+    case local
+    // 服务器
+    case server
+}
+public extension JKPOP where Base: FileManager {
+    
+    // MARK: 3.1、通过本地(沙盒)视频文件路径获取截图
+    /// 通过本地(沙盒)视频文件路径获取截图
+    /// - Parameters:
+    ///   - videoPath: 视频在沙盒的路径
+    ///   - preferredTrackTransform: 缩略图的方向
+    /// - Returns: 视频的缩略图
+    static func getLocalVideoImage(videoPath: String, preferredTrackTransform: Bool = true) -> UIImage? {
+        //  获取截图
+        let videoImage = getVideoImage(videoUrlSouceType: .local, path: videoPath, seconds: 1, preferredTimescale: 10, maximumSize: nil, preferredTrackTransform: preferredTrackTransform)
+        return videoImage
+    }
+    
+    // MARK: 3.2、通过本地(沙盒)视频文件路径数组获取截图数组
+    /// 通过本地(沙盒)视频文件路径数组获取截图数组
+    /// - Parameters:
+    ///   - videoPaths: 视频在沙盒的路径数组
+    ///   - preferredTrackTransform: 缩略图的方向
+    /// - Returns: 视频的缩略图数组
+    static func getLocalVideoImages(videoPaths: [String], preferredTrackTransform: Bool = true) -> [UIImage?] {
+        //  获取截图
+        var allImageArray: [UIImage?] = []
+        for path in videoPaths {
+            let videoImage = getVideoImage(videoUrlSouceType: .local, path: path, seconds: 1, preferredTimescale: 10, maximumSize: nil, preferredTrackTransform: preferredTrackTransform)
+            allImageArray.append(videoImage)
+        }
+        return allImageArray
+    }
+    
+    // MARK: 3.3、通过网络视频文件路径获取截图
+    /// 通过网络视频文件路径获取截图
+    /// - Parameters:
+    ///   - videoPath: 视频在沙盒的路径
+    ///   - preferredTrackTransform: 缩略图的方向
+    /// - Returns: 视频的缩略图
+    static func getServerVideoImage(videoPath: String, videoImage: @escaping (UIImage?) -> Void, preferredTrackTransform: Bool = true) {
+        //异步获取网络视频缩略图，由于网络请求比较耗时，所以我们把获取在线视频的相关代码写在异步线程里
+        DispatchQueue.global().async {
+            //  获取截图
+            let image = getVideoImage(videoUrlSouceType: .server, path: videoPath, seconds: 1, preferredTimescale: 10, maximumSize: nil, preferredTrackTransform: preferredTrackTransform)
+            DispatchQueue.main.async {
+                videoImage(image)
+            }
+        }
+    }
+    
+    // MARK: 3.4、通过网络视频文件路径数组获取截图数组
+    /// 通过网络视频文件路径数组获取截图数组
+    /// - Parameters:
+    ///   - videoPaths: 视频在沙盒的路径数组
+    ///   - preferredTrackTransform: 缩略图的方向
+    /// - Returns: 视频的缩略图数组
+    static func getServerVideoImages(videoPaths: [String], videoImages: @escaping ([UIImage?]) -> Void, preferredTrackTransform: Bool = true) {
+        //异步获取网络视频缩略图，由于网络请求比较耗时，所以我们把获取在线视频的相关代码写在异步线程里
+        DispatchQueue.global().async {
+            //  获取截图
+            var allImageArray: [UIImage?] = []
+            for path in videoPaths {
+                let videoImage = getVideoImage(videoUrlSouceType: .server, path: path, seconds: 1, preferredTimescale: 10, maximumSize: nil, preferredTrackTransform: preferredTrackTransform)
+                allImageArray.append(videoImage)
+            }
+            DispatchQueue.main.async {
+                videoImages(allImageArray)
+            }
+        }
+    }
+   
+    // MARK: 获取视频缩略图的共有方法
+    /// 获取视频缩略图的共有方法
+    /// - Parameters:
+    ///   - videoUrlSouceType: 视频来源类型
+    ///   - path: 本地路径或者网络视频连接
+    ///   - seconds: 取第几秒
+    ///   - preferredTimescale: 一秒钟几帧
+    ///   - maximumSize: 设置图片的最大size(分辨率)
+    ///   - preferredTrackTransform: 设定缩略图的方向，如果不设定，可能会在视频旋转90/180/270°时，获取到的缩略图是被旋转过的，而不是正向的
+    /// - Returns: 返回获取的图片
+    private static func getVideoImage(videoUrlSouceType: JKVideoUrlType = .local, path: String, seconds: Double = 1, preferredTimescale: CMTimeScale = 10, maximumSize: CGSize?, preferredTrackTransform: Bool = true) -> UIImage? {
+        var videoURL: URL?
+        
+        if videoUrlSouceType == .local {
+            videoURL = URL(fileURLWithPath: path)
+        } else {
+            videoURL = URL(string: path)!
+        }
+        
+        guard let weakVideoURL = videoURL else {
+            return nil
+        }
+        let videoAsset = AVURLAsset(url: weakVideoURL)
+    
+        let imageGenerator = AVAssetImageGenerator(asset: videoAsset)
+        // 设定缩略图的方向
+        // 如果不设定，可能会在视频旋转90/180/270°时，获取到的缩略图是被旋转过的，而不是正向的
+        imageGenerator.appliesPreferredTrackTransform = preferredTrackTransform
+        // 设置图片的最大size(分辨率)
+        if let size = maximumSize {
+            imageGenerator.maximumSize = size
+        }
+        // 取第几秒，一秒钟几帧
+        let cmTime = CMTime(seconds: seconds, preferredTimescale: preferredTimescale)
+        if let cgImg = try? imageGenerator.copyCGImage(at: cmTime, actualTime: nil) {
+            let img = UIImage(cgImage: cgImg)
+            return img
+        } else {
+            JKPrint("获取缩略图失败")
+            return nil
+        }
+    }
+}
+

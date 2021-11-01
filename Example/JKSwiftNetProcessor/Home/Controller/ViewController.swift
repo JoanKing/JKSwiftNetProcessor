@@ -8,6 +8,7 @@
 
 import UIKit
 import Alamofire
+import JKSwiftExtension
 
 class ViewController: BaseViewController {
     
@@ -140,7 +141,7 @@ extension ViewController {
         self.view.addSubview(imageView)
         //指定下载路径和保存文件名
         let destination: DownloadRequest.DownloadFileDestination = { _, _ in
-            let fileURL = URL(fileURLWithPath: FileManager.DocumnetsDirectory() + "/测试改名/" + "myLogo.png")
+            let fileURL = URL(fileURLWithPath: FileManager.jk.DocumnetsDirectory() + "/测试改名/" + "myLogo.png")
             //两个参数表示如果有同名文件则会覆盖，如果路径中文件夹不存在则会自动创建
             return (fileURL, [.removePreviousFile, .createIntermediateDirectories])
         }
@@ -167,10 +168,10 @@ extension ViewController {
         let imageView = UIImageView(frame: CGRect(x: 100, y: 100, width: 150, height: 150))
         self.view.addSubview(imageView)
         
-        print("路径：\(FileManager.homeDirectory())")
+        print("路径：\(FileManager.jk.homeDirectory())")
         // 指定下载后的存储路径（文件名不变）
         let destination: DownloadRequest.DownloadFileDestination = { _, response in
-            let fileURL = URL(fileURLWithPath: FileManager.DocumnetsDirectory() + "/" + response.suggestedFilename!)
+            let fileURL = URL(fileURLWithPath: FileManager.jk.DocumnetsDirectory() + "/" + response.suggestedFilename!)
             // 两个参数表示如果有同名文件则会覆盖，如果路径中文件夹不存在则会自动创建
             return (fileURL, [.removePreviousFile, .createIntermediateDirectories])
         }
@@ -252,7 +253,7 @@ extension ViewController {
             if response.isSuccess, let model = response.model {
                 print("姓名和身高：\(model.nameAndAge ?? "")")
             } else {
-                response.getMsgStr().toast()
+                JKPrint(response.getMsgStr())
             }
         }
     }

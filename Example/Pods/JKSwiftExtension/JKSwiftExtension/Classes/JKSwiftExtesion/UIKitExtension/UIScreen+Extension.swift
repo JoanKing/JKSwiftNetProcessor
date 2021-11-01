@@ -6,9 +6,9 @@
 //
 
 import UIKit
-
-// MARK:- 一、基本的扩展
-public extension UIScreen {
+extension UIScreen: JKPOPCompatible {}
+// MARK: - 一、基本的扩展
+public extension JKPOP where Base: UIScreen {
 
     // MARK: 1.1、获取宽度
     /// 获取宽度

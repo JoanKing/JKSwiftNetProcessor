@@ -8,14 +8,14 @@
 
 import UIKit
 
-// MARK:- 带有样式的button
+// MARK: - 带有样式的button
 private enum LineType {
     case none
     case color(_: UIColor)
 }
 
-// MARK:- 一、基本的扩展
-public extension UIButton {
+// MARK: - 一、基本的扩展
+public extension JKPOP where Base: UIButton {
     enum SmallButtonType {
         case red
         case pink
@@ -112,7 +112,7 @@ public extension UIButton {
     }
 }
 
-// MARK:- 二、链式调用
+// MARK: - 二、链式调用
 public extension UIButton {
     
     // MARK: 2.1、设置title
@@ -221,7 +221,7 @@ public extension UIButton {
     /// - Returns: 返回自身
     @discardableResult
     func image(_ color: UIColor, _ size: CGSize = CGSize(width: 20.0, height: 20.0), _ state: UIControl.State = .normal) -> Self {
-        let image = UIImage.image(color: color, size: size)
+        let image = UIImage.jk.image(color: color, size: size)
         setImage(image, for: state)
         return self
     }
@@ -278,7 +278,7 @@ public extension UIButton {
     /// - Returns: 返回自身
     @discardableResult
     func bgImage(_ color: UIColor, _ state: UIControl.State = .normal) -> Self {
-        let image = UIImage.image(color: color)
+        let image = UIImage.jk.image(color: color)
         setBackgroundImage(image, for: state)
         return self
     }
@@ -288,17 +288,17 @@ public extension UIButton {
     /// - Returns: 返回自身
     @discardableResult
     func confirmButton() -> Self {
-        let normalImage = UIImage.image(color: UIColor.hexStringColor(hexString: "#E54749"), size: CGSize(width: 10, height: 10), corners: .allCorners, radius: 4)?.resizableImage(withCapInsets: UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
-        let disableImg = UIImage.image(color: UIColor.hexStringColor(hexString: "#E6E6E6"), size: CGSize(width: 10, height: 10), corners: .allCorners, radius: 4)?.resizableImage(withCapInsets: UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
+        let normalImage = UIImage.jk.image(color: UIColor.hexStringColor(hexString: "#E54749"), size: CGSize(width: 10, height: 10), corners: .allCorners, radius: 4)?.resizableImage(withCapInsets: UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
+        let disableImg = UIImage.jk.image(color: UIColor.hexStringColor(hexString: "#E6E6E6"), size: CGSize(width: 10, height: 10), corners: .allCorners, radius: 4)?.resizableImage(withCapInsets: UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
         setBackgroundImage(normalImage, for: .normal)
         setBackgroundImage(disableImg, for: .disabled)
         return self
     }
 }
 
-// MARK:- 三、UIButton 图片 与 title 位置关系
+// MARK: - 三、UIButton 图片 与 title 位置关系
 /// UIButton 图片与title位置关系 https://www.jianshu.com/p/0f34c1b52604
-public extension UIButton {
+public extension JKPOP where Base: UIButton {
     
     /// 图片 和 title 的布局样式
     enum ImageTitleLayout {
@@ -315,7 +315,7 @@ public extension UIButton {
     ///   - spacing: 间距
     /// - Returns: 返回自身
     @discardableResult
-    func setImageTitleLayout(_ layout: ImageTitleLayout, spacing: CGFloat = 0) -> Self {
+    func setImageTitleLayout(_ layout: ImageTitleLayout, spacing: CGFloat = 0) -> UIButton {
         switch layout {
         case .imgLeft:
             alignHorizontal(spacing: spacing, imageFirst: true)
@@ -326,7 +326,7 @@ public extension UIButton {
         case .imgBottom:
             alignVertical(spacing: spacing, imageTop: false)
         }
-        return self
+        return self.base
     }
     
     /// 水平方向
@@ -335,20 +335,20 @@ public extension UIButton {
     ///   - imageFirst: 图片是否优先
     private func alignHorizontal(spacing: CGFloat, imageFirst: Bool) {
         let edgeOffset = spacing / 2
-        imageEdgeInsets = UIEdgeInsets(top: 0,
+        base.imageEdgeInsets = UIEdgeInsets(top: 0,
                                        left: -edgeOffset,
                                        bottom: 0,
                                        right: edgeOffset)
-        titleEdgeInsets = UIEdgeInsets(top: 0,
+        base.titleEdgeInsets = UIEdgeInsets(top: 0,
                                        left: edgeOffset,
                                        bottom: 0,
                                        right: -edgeOffset)
         if !imageFirst {
-            self.transform = CGAffineTransform(scaleX: -1, y: 1)
-            imageView?.transform = CGAffineTransform(scaleX: -1, y: 1)
-            titleLabel?.transform = CGAffineTransform(scaleX: -1, y: 1)
+            base.transform = CGAffineTransform(scaleX: -1, y: 1)
+            base.imageView?.transform = CGAffineTransform(scaleX: -1, y: 1)
+            base.titleLabel?.transform = CGAffineTransform(scaleX: -1, y: 1)
         }
-        contentEdgeInsets = UIEdgeInsets(top: 0, left: edgeOffset, bottom: 0, right: edgeOffset)
+        base.contentEdgeInsets = UIEdgeInsets(top: 0, left: edgeOffset, bottom: 0, right: edgeOffset)
     }
     
     /// 垂直方向
@@ -356,9 +356,9 @@ public extension UIButton {
     ///   - spacing: 间距
     ///   - imageTop: 图片是不是在顶部
     private func alignVertical(spacing: CGFloat, imageTop: Bool) {
-        guard let imageSize = self.imageView?.image?.size,
-            let text = self.titleLabel?.text,
-            let font = self.titleLabel?.font
+        guard let imageSize = self.base.imageView?.image?.size,
+              let text = self.base.titleLabel?.text,
+              let font = self.base.titleLabel?.font
             else {
                 return
         }
@@ -371,21 +371,21 @@ public extension UIButton {
         let titleHorizontalOffset = (imageSize.width) / 2
         let sign: CGFloat = imageTop ? 1 : -1
         
-        imageEdgeInsets = UIEdgeInsets(top: -imageVerticalOffset * sign,
+        base.imageEdgeInsets = UIEdgeInsets(top: -imageVerticalOffset * sign,
                                        left: imageHorizontalOffset,
                                        bottom: imageVerticalOffset * sign,
                                        right: -imageHorizontalOffset)
-        titleEdgeInsets = UIEdgeInsets(top: titleVerticalOffset * sign,
+        base.titleEdgeInsets = UIEdgeInsets(top: titleVerticalOffset * sign,
                                        left: -titleHorizontalOffset,
                                        bottom: -titleVerticalOffset * sign,
                                        right: titleHorizontalOffset)
         // increase content height to avoid clipping
-        let edgeOffset = (min(imageSize.height, titleSize.height) + spacing)/2
-        contentEdgeInsets = UIEdgeInsets(top: edgeOffset, left: 0, bottom: edgeOffset, right: 0)
+        let edgeOffset = (min(imageSize.height, titleSize.height) + spacing) / 2
+        base.contentEdgeInsets = UIEdgeInsets(top: edgeOffset, left: 0, bottom: edgeOffset, right: 0)
     }
 }
 
-// MARK:- 四、自带倒计时功能的 Button（有待改进）
+// MARK: - 四、自带倒计时功能的 Button（有待改进）
 /// 自带倒计时功能的Button
 /// - 状态分为 [倒计时中，倒计时完成]，分别提供回调
 /// - 需要和业务结合时，后期再考虑
@@ -513,6 +513,65 @@ public extension UIButton {
         static var running_key = "running_key"
         static var timeringPrefix_key = "timering_prefix_key"
         static var reEnableCond_key = "re_enable_cond_key"
+    }
+}
+
+// MARK: - 五、Button的基本事件
+private var buttonCallBackKey: Void?
+extension UIButton: JKSwiftPropertyCompatible {
+    internal typealias T = UIButton
+    internal var swiftCallBack: SwiftCallBack? {
+        get { return jk_getAssociatedObject(self, &buttonCallBackKey) }
+        set { jk_setRetainedAssociatedObject(self, &buttonCallBackKey, newValue) }
+    }
+    
+    @objc internal func swiftButtonAction(_ button: UIButton) {
+        self.swiftCallBack?(button)
+    }
+}
+
+public extension JKPOP where Base: UIButton {
+    
+    // MARK: 5.1、button的事件
+    /// button的事件
+    /// - Parameters:
+    ///   - controlEvents: 事件类型，默认是 valueChanged
+    ///   - buttonCallBack: 事件
+    /// - Returns: 闭包事件
+    func setHandleClick(controlEvents: UIControl.Event = .touchUpInside, buttonCallBack: ((_ button: UIButton?) -> ())?){
+        base.swiftCallBack = buttonCallBack
+        base.addTarget(base, action: #selector(base.swiftButtonAction), for: controlEvents)
+    }
+}
+
+// MARK: - 六、Button扩大点击事件
+private var JKUIButtonExpandSizeKey = "JKUIButtonExpandSizeKey"
+public extension UIButton {
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        let buttonRect = self.jk.expandRect()
+        if (buttonRect.equalTo(bounds)) {
+            return super.point(inside: point, with: event)
+        }else{
+            return buttonRect.contains(point)
+        }
+    }
+}
+public extension JKPOP where Base: UIButton {
+
+    // MARK: 6.1、扩大UIButton的点击区域，向四周扩展10像素的点击范围
+    /// 扩大UIButton的点击区域，向四周扩展10像素的点击范围
+    /// - Parameter size: 向四周扩展像素的点击范围
+    func expandSize(size: CGFloat) {
+        objc_setAssociatedObject(self.base, &JKUIButtonExpandSizeKey, size, objc_AssociationPolicy.OBJC_ASSOCIATION_COPY)
+    }
+
+    fileprivate func expandRect() -> CGRect {
+        let expandSize = objc_getAssociatedObject(self.base, &JKUIButtonExpandSizeKey)
+        if (expandSize != nil) {
+            return CGRect(x: self.base.bounds.origin.x - (expandSize as! CGFloat), y: self.base.bounds.origin.y - (expandSize as! CGFloat), width: self.base.bounds.size.width + 2 * (expandSize as! CGFloat), height: self.base.bounds.size.height + 2 * (expandSize as! CGFloat))
+        } else {
+            return self.base.bounds
+        }
     }
 }
 
