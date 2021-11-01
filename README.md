@@ -27,3 +27,8 @@ JoanKing, chongwang27@creditease.cn
 ## License
 
 JKSwiftNetProcessor is available under the MIT license. See the LICENSE file for more info.
+
+
+##版本更新记录
+  - 0.1.2、版本
+    - 网络超时的错误文案更新
